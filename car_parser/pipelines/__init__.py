@@ -1,0 +1,1 @@
+from car_parser.pipelines.MongoPipeline import MongoPipeline

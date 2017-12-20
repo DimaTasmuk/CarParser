@@ -1,1 +1,1 @@
-# -*- coding: UTF-8 -*-
+from car_parser.loaders.AutoDeLoader import AutoDeLoader
