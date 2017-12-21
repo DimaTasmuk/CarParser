@@ -12,10 +12,11 @@ class AutoDeParser(scrapy.Spider):
 
     list_cars_info = list()
 
-    def __init__(self, brand_key=None, **kwargs):
-        if brand_key:
-            self.brand_key = [brand_key]
-        super(AutoDeParser, self).__init__(brand_key, **kwargs)
+    def __init__(self, brand_keys=None, **kwargs):
+        if brand_keys:
+            for brand_key in brand_keys:
+                self.brand_key = [brand_key]
+        super(AutoDeParser, self).__init__(brand_keys, **kwargs)
 
     def parse(self, response):
         yield response.follow("#brandModelLayer", self.parse_brands)
