@@ -19,6 +19,7 @@ class AutoDeParser(scrapy.Spider):
             brand_id = response.meta.get('brand_id')
         except:
             brand_id = ['11149', '51', '11220']
+        print(brand_id)
         model_keys = set(response.css("div.brandModelLayer div.autoForm ul.brandModel").xpath('//select[@id="sci"]').css("select.brandSearch option::attr(value)").extract())
         for model_key in model_keys:
             if model_key in [brand_id]:
