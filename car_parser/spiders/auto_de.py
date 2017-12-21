@@ -17,8 +17,7 @@ class AutoDeParser(scrapy.Spider):
     def __init__(self, brand_key=None, **kwargs):
         logging.log(logging.INFO, brand_key)
         if brand_key:
-            for key in brand_key:
-                self.brand_keys.append(key)
+            self.brand_keys.append(brand_key)
         super(AutoDeParser, self).__init__(brand_key, **kwargs)
 
     def parse(self, response):
