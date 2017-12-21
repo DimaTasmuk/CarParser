@@ -15,6 +15,7 @@ class AutoDeParser(scrapy.Spider):
     list_cars_info = list()
 
     def __init__(self, brand_key=None, **kwargs):
+        logging.log(logging.INFO, brand_key)
         if brand_key:
             for key in brand_key:
                 self.brand_keys.append(key)
