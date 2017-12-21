@@ -1,3 +1,5 @@
+import logging
+
 import scrapy
 from car_parser.items.AutoDeCarItem import AutoDeCarItem
 from car_parser.loaders.AutoDeLoader import AutoDeLoader
@@ -19,6 +21,7 @@ class AutoDeParser(scrapy.Spider):
         super(AutoDeParser, self).__init__(brand_key, **kwargs)
 
     def parse(self, response):
+        logging.log(logging.INFO, self.brand_keys)
         yield response.follow("#brandModelLayer", self.parse_brands)
 
     def parse_brands(self, response):
