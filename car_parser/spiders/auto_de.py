@@ -16,7 +16,7 @@ class AutoDeParser(scrapy.Spider):
 
     def parse_brands(self, response):
         try:
-            brand_id = response.meta.get('brand_id')
+            brand_id = [response.meta.get('brand_id')]
         except:
             brand_id = ['11149', '51', '11220']
         print(brand_id)
