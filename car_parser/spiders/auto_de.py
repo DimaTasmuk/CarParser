@@ -14,7 +14,7 @@ class AutoDeParser(scrapy.Spider):
 
     def __init__(self, brand_key=None, **kwargs):
         if brand_key:
-            self.brand_key = brand_key
+            self.brand_key = [brand_key]
         super(AutoDeParser, self).__init__(brand_key, **kwargs)
 
     def parse(self, response):
@@ -23,7 +23,7 @@ class AutoDeParser(scrapy.Spider):
     def parse_brands(self, response):
         model_keys = set(response.css("div.brandModelLayer div.autoForm ul.brandModel").xpath('//select[@id="sci"]').css("select.brandSearch option::attr(value)").extract())
         for model_key in model_keys:
-            if model_key in [self.brand_key]:
+            if model_key in self.brand_key:
                 url = response.url.split("sci%5B%5D=")[0] + "sci%5B%5D=" + model_key + response.url.split("sci%5B%5D=")[1]
                 yield response.follow(url, self.parse_cars)
 
