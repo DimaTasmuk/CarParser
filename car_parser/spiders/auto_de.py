@@ -10,6 +10,11 @@ class AutoDeParser(scrapy.Spider):
     start_urls = ["http://www.auto.de/search/findoffer?sci%5B%5D=&spra=&sma=&sg=&srdi=&sft=&sz=&src=1&"
                   "vt%5B%5D=1&vt%5B%5D=2&vt%5B%5D=3&vt%5B%5D=4&vt%5B%5D=5&vt%5B%5D=6&vt%5B%5D=7&"
                   "vt%5B%5D=8&vt%5B%5D=99&searchFast=Fahrzeug+suchen&srtcbd=0_asc"]
+    custom_settings = {
+        'ITEM_PIPELINES': {
+            'car_parser.pipelines.AutoDePipeline': 300
+        }
+    }
     brand_keys = list()
 
     list_cars_info = list()

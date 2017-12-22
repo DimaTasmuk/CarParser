@@ -2,7 +2,7 @@ import pymongo
 from car_parser.settings import MONGO_URI, MONGO_DATABASE
 
 
-class MongoPipeline(object):
+class AutoDePipeline(object):
 
     collection_name = 'auto_de_collection'
 
