@@ -29,7 +29,7 @@ class AutoUncleParser(scrapy.Spider):
                 self.replace_symbols_in_line(model)
                 for model in row.split(":[[")[1].replace("],[", ",").split(",")[1::2]
             ]
-            if brand == "Audi":
+            if brand == "Volvo":
                 yield response.follow(response.url + "?s%5Bbrand%5D=" + brand, self.parse_price)
 
     def parse_price(self, response):
