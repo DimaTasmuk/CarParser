@@ -1,7 +1,7 @@
 import scrapy
 
 
-class AutoDeCarItem(scrapy.Item):
+class AutoItem(scrapy.Item):
     title = scrapy.Field()
     registrationDate = scrapy.Field()
     mileage = scrapy.Field()

@@ -1,8 +1,8 @@
 from scrapy.loader import ItemLoader
-from scrapy.loader.processors import TakeFirst, MapCompose, Join, Identity, Compose
+from scrapy.loader.processors import TakeFirst, MapCompose, Compose
 
 
-class AutoDeLoader(ItemLoader):
+class AutoLoader(ItemLoader):
     default_input_processor = MapCompose(unicode.strip)
     default_output_processor = TakeFirst()
 

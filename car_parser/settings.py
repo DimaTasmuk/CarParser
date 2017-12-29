@@ -9,8 +9,11 @@
 #     http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 #     http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
 
-MONGO_URI = 'mongodb://Dima:Dima@ds061246.mlab.com:61246/scrapy_auto_de'
-MONGO_DATABASE = 'scrapy_auto_de'
+AUTO_URI = 'mongodb://Dima:Dima@ds061246.mlab.com:61246/scrapy_auto_de'
+AUTO_DATABASE = 'scrapy_auto_de'
+
+AUTO_UNCLE_URI = 'mongodb://Dima:Dima@ds113702.mlab.com:13702/scrapy_autouncle_de'
+AUTO_UNCLE_DATABASE = 'scrapy_autouncle_de'
 
 BOT_NAME = 'car_parser'
 

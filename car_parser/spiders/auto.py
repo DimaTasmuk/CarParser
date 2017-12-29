@@ -1,18 +1,18 @@
 import logging
 
 import scrapy
-from car_parser.items.AutoDeCarItem import AutoDeCarItem
-from car_parser.loaders.AutoDeLoader import AutoDeLoader
+from car_parser.items.AutoItem import AutoItem
+from car_parser.loaders.AutoLoader import AutoLoader
 
 
-class AutoDeParser(scrapy.Spider):
-    name = "autode_parser"
+class AutoParser(scrapy.Spider):
+    name = "auto_parser"
     start_urls = ["http://www.auto.de/search/findoffer?sci%5B%5D=&spra=&sma=&sg=&srdi=&sft=&sz=&src=1&"
                   "vt%5B%5D=1&vt%5B%5D=2&vt%5B%5D=3&vt%5B%5D=4&vt%5B%5D=5&vt%5B%5D=6&vt%5B%5D=7&"
                   "vt%5B%5D=8&vt%5B%5D=99&searchFast=Fahrzeug+suchen&srtcbd=0_asc"]
     custom_settings = {
         'ITEM_PIPELINES': {
-            'car_parser.pipelines.AutoDePipeline': 300
+            'car_parser.pipelines.AutoPipeline': 300
         }
     }
     brand_keys = list()
@@ -24,7 +24,7 @@ class AutoDeParser(scrapy.Spider):
         if brand_key:
             for key in brand_key.split(','):
                 self.brand_keys.append(key)
-        super(AutoDeParser, self).__init__(brand_key, **kwargs)
+        super(AutoParser, self).__init__(brand_key, **kwargs)
 
     def parse(self, response):
         logging.log(logging.INFO, self.brand_keys)
@@ -40,7 +40,7 @@ class AutoDeParser(scrapy.Spider):
     def parse_cars(self, response):
         cars = response.css("ul.vehicleList li.contentDesc a.vehicleOffersBox")
         for car in cars:
-            loader = AutoDeLoader(item=AutoDeCarItem(), selector=car)
+            loader = AutoLoader(item=AutoItem(), selector=car)
             loader.add_css('title', ".headline::text")
 
             vehicle_data_loader = loader.nested_css("div.technicalData p span")
