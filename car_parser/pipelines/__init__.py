@@ -1,1 +1,2 @@
-from car_parser.pipelines.AutoDePipeline import AutoDePipeline
+from car_parser.pipelines.AutoPipeline import AutoPipeline
+from car_parser.pipelines.AutoUnclePipeline import AutoUnclePipeline

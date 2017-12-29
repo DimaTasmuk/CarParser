@@ -1,1 +1,2 @@
-from car_parser.spiders.auto_de import AutoDeParser
+from car_parser.spiders.auto import AutoParser
+from car_parser.spiders.autouncle import AutoUncleParser
