@@ -7,38 +7,56 @@ from car_parser.loaders.AutoLoader import AutoLoader
 
 class AutoParser(scrapy.Spider):
     name = "auto_parser"
+
     start_urls = ["http://www.auto.de/search/findoffer?sci%5B%5D=&spra=&sma=&sg=&srdi=&sft=&sz=&src=1&"
                   "vt%5B%5D=1&vt%5B%5D=2&vt%5B%5D=3&vt%5B%5D=4&vt%5B%5D=5&vt%5B%5D=6&vt%5B%5D=7&"
                   "vt%5B%5D=8&vt%5B%5D=99&searchFast=Fahrzeug+suchen&srtcbd=0_asc"]
+
     custom_settings = {
         'ITEM_PIPELINES': {
             'car_parser.pipelines.AutoPipeline': 300
         }
     }
-    brand_keys = list()
 
+    PARAMETER_BRAND_NAME = "sci%5B%5D="
+
+    specified_brand_keys = list()
     list_cars_info = list()
 
     def __init__(self, brand_key=None, **kwargs):
         logging.log(logging.INFO, brand_key)
         if brand_key:
             for key in brand_key.split(','):
-                self.brand_keys.append(key)
+                self.specified_brand_keys.append(key)
         super(AutoParser, self).__init__(brand_key, **kwargs)
 
     def parse(self, response):
-        logging.log(logging.INFO, self.brand_keys)
+        logging.log(logging.INFO, self.specified_brand_keys)
         yield response.follow("#brandModelLayer", self.parse_brands)
 
     def parse_brands(self, response):
-        model_keys = set(response.css("div.brandModelLayer div.autoForm ul.brandModel").xpath('//select[@id="sci"]').css("select.brandSearch option::attr(value)").extract())
-        for model_key in model_keys:
-            if model_key in self.brand_keys:
-                url = response.url.split("sci%5B%5D=")[0] + "sci%5B%5D=" + model_key + response.url.split("sci%5B%5D=")[1]
+        if self.specified_brand_keys:
+            for key in self.specified_brand_keys:
+                url = self.get_url_by_brand_key(response, key)
                 yield response.follow(url, self.parse_cars)
+        else:
+            brand_keys = set(response.css("div.brandModelLayer div.autoForm ul.brandModel")
+                             .xpath('//select[@id="sci"]')
+                             .css("select.brandSearch option::attr(value)")
+                             .extract())
+            for key in brand_keys:
+                url = self.get_url_by_brand_key(response, key)
+                yield response.follow(url, self.parse_cars)
+
+    def get_url_by_brand_key(self, response, key):
+        return response.url.split(self.PARAMETER_BRAND_NAME)[0] + \
+               self.PARAMETER_BRAND_NAME + \
+               key + \
+               response.url.split(self.PARAMETER_BRAND_NAME)[1]
 
     def parse_cars(self, response):
         cars = response.css("ul.vehicleList li.contentDesc a.vehicleOffersBox")
+
         for car in cars:
             loader = AutoLoader(item=AutoItem(), selector=car)
             loader.add_css('title', ".headline::text")
