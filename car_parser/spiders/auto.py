@@ -53,7 +53,10 @@ class AutoParser(scrapy.Spider):
             key = re.search(r'value="(\d+)"', brand).group(1)
             name = re.search(r'>(.*)<', brand).group(1)
             self.brands[key] = name
-            if key in self.specified_brand_keys and key != "":
+
+            #  parse cars if key is not empty. If brand specified by user - verify that key in that list of brand keys
+            if key != "" and \
+                    ((self.specified_brand_keys and key in self.specified_brand_keys) or not self.specified_brand_keys):
                 # get url for car filtered by brand
                 page_url = self.get_url_with_parameter_key(response, self.PARAMETER_BRAND_NAME, key)
 
@@ -67,7 +70,7 @@ class AutoParser(scrapy.Spider):
             .css("select#spi-for-sci option")\
             .extract()
         for model in models[1:]:  # first element is empty
-            key = re.search(r'value="(\d+-\d+)"', model).group(1)
+            key = re.search(r'value="((\d\|?)+-\d+)"', model).group(1)
             name = re.search(r'>(.*)<', model).group(1)
             self.models[key] = name
             if key != "":
@@ -80,7 +83,7 @@ class AutoParser(scrapy.Spider):
         model = self.models[model_key]
 
         cars = response.css("ul.vehicleOffers.vehicleList li.contentDesc")\
-            .xpath("a[contains(@title, '" + model + "')]")
+            .xpath("a[contains(@title, '" + brand + ' ' + model + "')]")
         for car in cars:
             headline = car.css("*.headline.ellipsisText::text").extract_first()
 
@@ -129,9 +132,11 @@ class AutoParser(scrapy.Spider):
         return url + "#brandModelLayer"
 
     def get_brand_model_key_from_url(self, url):
-        match_obj = re.search('%5D=(\d+-(\d+))', url)
-        # group 2 - brand_key, group 1 - model_key
-        return match_obj.group(2), match_obj.group(1)
+        match_obj = re.search('%5D=((\d(?:%7C|\|)?)+-(\d+))', url)
+        return match_obj.group(3), match_obj.group(1).replace("%7C", "|")
 
     def get_title(self, brand, model, headline):
-        return re.search(brand + " " + model + "(.*)", headline).group(1).strip()
+        try:
+            return re.search(brand + " " + model + "(.*)", headline).group(1).strip()
+        except:
+            return ""
