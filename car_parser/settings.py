@@ -9,18 +9,17 @@
 #     http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 #     http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
 
-AUTO_URI = 'mongodb://Dima:Dima@ds061246.mlab.com:61246/scrapy_auto_de'
-AUTO_DATABASE = 'scrapy_auto_de'
-
-AUTO_UNCLE_URI = 'mongodb://Dima:Dima@ds113702.mlab.com:13702/scrapy_autouncle_de'
-AUTO_UNCLE_DATABASE = 'scrapy_autouncle_de'
+MONGO_URI = 'mongodb://Dima:Dima@ds153577.mlab.com:53577/autostore'
+MONGO_DATABASE = 'autostore'
 
 BOT_NAME = 'car_parser'
 
 SPIDER_MODULES = ['car_parser.spiders']
 NEWSPIDER_MODULE = 'car_parser.spiders'
 
-DEFAULT_ITEM_CLASS = 'car_parser.items.AutoDeCarItem'
+# The default class that will be used for instantiating items in the Scrapy shell
+#DEFAULT_ITEM_CLASS = 'car_parser.items.AutoDeCarItem'
+
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'car_parser (+http://www.yourdomain.com)'
 
@@ -70,9 +69,9 @@ ROBOTSTXT_OBEY = False
 
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
-# ITEM_PIPELINES = {
-#    'car_parser.pipelines.MongoPipeline': 300,
-# }
+ITEM_PIPELINES = {
+   'car_parser.pipelines.MongoPipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html

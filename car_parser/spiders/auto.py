@@ -8,16 +8,11 @@ from car_parser.loaders.AutoLoader import AutoLoader
 # Spider call example: scrapy crawl auto_parser -o xml_files\auto_parser.xml -a brand_key=870
 class AutoParser(scrapy.Spider):
     name = "auto_parser"
-
     start_urls = ["http://www.auto.de/search/findoffer?sci%5B%5D=&spra=&sma=&sg=&srdi=&sft=&sz=&src=1&"
                   "vt%5B%5D=1&vt%5B%5D=2&vt%5B%5D=3&vt%5B%5D=4&vt%5B%5D=5&vt%5B%5D=6&vt%5B%5D=7&"
                   "vt%5B%5D=8&vt%5B%5D=99&searchFast=Fahrzeug+suchen&srtcbd=0_asc"]
 
-    custom_settings = {
-        'ITEM_PIPELINES': {
-            'car_parser.pipelines.AutoPipeline': 300
-        }
-    }
+    collection_name = 'auto_collection'
 
     PARAMETER_BRAND_NAME = "sci%5B%5D="
     PARAMETER_MODEL_NAME = "&spi%5B%5D="

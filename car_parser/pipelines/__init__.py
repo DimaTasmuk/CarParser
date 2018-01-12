@@ -1,2 +1,1 @@
-from car_parser.pipelines.AutoPipeline import AutoPipeline
-from car_parser.pipelines.AutoUnclePipeline import AutoUnclePipeline
+from car_parser.pipelines.MongoPipeline import MongoPipeline
