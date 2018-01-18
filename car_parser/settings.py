@@ -21,7 +21,7 @@ NEWSPIDER_MODULE = 'car_parser.spiders'
 #DEFAULT_ITEM_CLASS = 'car_parser.items.AutoDeCarItem'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'car_parser (+http://www.yourdomain.com)'
+USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
@@ -57,9 +57,17 @@ ROBOTSTXT_OBEY = False
 
 # Enable or disable downloader middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
-#    'car_parser.middlewares.MyCustomDownloaderMiddleware': 543,
-#}
+DOWNLOADER_MIDDLEWARES_BASE = {
+    'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': 100,
+    'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware': 200,
+    'scrapy.downloadermiddlewares.retry.RetryMiddleware': 300,
+    'scrapy.downloadermiddlewares.redirect.RedirectMiddleware': 400,
+    'scrapy.downloadermiddlewares.stats.DownloaderStats': 500,
+}
+
+# Change RetryMiddleware default setting
+RETRY_TIMES = 10
+RETRY_HTTP_CODES = [500, 502, 503, 504, 408, 400]
 
 # Enable or disable extensions
 # See http://scrapy.readthedocs.org/en/latest/topics/extensions.html
@@ -69,9 +77,9 @@ ROBOTSTXT_OBEY = False
 
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
-ITEM_PIPELINES = {
-   'car_parser.pipelines.MongoPipeline': 300,
-}
+# ITEM_PIPELINES = {
+#    'car_parser.pipelines.MongoPipeline': 300,
+# }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html
