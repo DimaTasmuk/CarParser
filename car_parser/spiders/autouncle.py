@@ -119,7 +119,7 @@ class AutoUncleParser(scrapy.Spider):
 
             loader.add_css('location', "ul li.location span::text")
 
-            info = loader.load_item().__str__()
+            info = loader.get_collected_values("details_link")
             if info not in self.adverts:
                 self.adverts.append(info)
                 yield loader.load_item()
