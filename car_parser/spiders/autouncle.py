@@ -95,33 +95,33 @@ class AutoUncleParser(scrapy.Spider):
 
     def parse_car(self, response):
         for car in response.css("div.car-list-item div.car-details-wrapper"):
-            model = self.replace_HEX_to_character(
-                self.get_string_value_by_parameter(response.url, self.PARAMETER_MODEL_NAME)
-            )
-            loader = AutoUncleLoader(item=AutoUncleItem(), selector=car)
-            loader.add_css('brand', "h3.car-title span b::text")
-            loader.add_value('model', model)
-            loader.add_css('title', 'h3.car-title span span::text')
-            loader.add_css('price', "div.pricing span.price::attr(content)")
+            details_link = car.css("h3.car-title a::attr(href)").extract_first()
+            if details_link not in self.adverts:
+                model = self.replace_HEX_to_character(
+                    self.get_string_value_by_parameter(response.url, self.PARAMETER_MODEL_NAME)
+                )
+                loader = AutoUncleLoader(item=AutoUncleItem(), selector=car)
+                loader.add_css('brand', "h3.car-title span b::text")
+                loader.add_value('model', model)
+                loader.add_css('title', 'h3.car-title span span::text')
+                loader.add_css('price', "div.pricing span.price::attr(content)")
 
-            loader.add_value('details_link', self.ORIGIN_LINK)
-            loader.add_css('details_link', "h3.car-title a::attr(href)")
+                loader.add_value('details_link', self.ORIGIN_LINK)
+                loader.add_value('details_link', details_link)
 
-            loader.add_css('image_url', "div.picture.left-half a.colorbox.cboxElement::attr(src)")
+                loader.add_css('image_url', "div.picture.left-half a.colorbox.cboxElement::attr(src)")
 
-            loader.add_css('reg_date', "ul li.year span::text")
-            loader.add_css('mileage', "ul li.km span::text")
-            loader.add_css('fuel_type', "ul li.engine span::text")
-            loader.add_css('fuel_consumption', "ul li.fuel_efficiency span span::text")
-            loader.add_css('fuel_consumption', "ul li.fuel_efficiency dfn::text")
-            loader.add_css('co2_emission', "ul li.co2_emission span::text")
-            loader.add_css('power', "ul li.hp span::text")
+                loader.add_css('reg_date', "ul li.year span::text")
+                loader.add_css('mileage', "ul li.km span::text")
+                loader.add_css('fuel_type', "ul li.engine span::text")
+                loader.add_css('fuel_consumption', "ul li.fuel_efficiency span span::text")
+                loader.add_css('fuel_consumption', "ul li.fuel_efficiency dfn::text")
+                loader.add_css('co2_emission', "ul li.co2_emission span::text")
+                loader.add_css('power', "ul li.hp span::text")
 
-            loader.add_css('location', "ul li.location span::text")
+                loader.add_css('location', "ul li.location span::text")
 
-            info = loader.get_collected_values("details_link")
-            if info not in self.adverts:
-                self.adverts.append(info)
+                self.adverts.append(details_link)
                 yield loader.load_item()
         url = response.css("div.pagination-container span.next a::attr(href)").extract_first()
         if url:
