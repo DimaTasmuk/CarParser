@@ -80,37 +80,37 @@ class AutoParser(scrapy.Spider):
         cars = response.css("ul.vehicleOffers.vehicleList li.contentDesc")\
             .xpath("a[contains(@title, '" + brand + ' ' + model + "')]")
         for car in cars:
-            headline = car.css("*.headline.ellipsisText::text").extract_first()
+            details_link = car.css("a.vehicleOffersBox::attr(href)").extract_first()
+            if details_link not in self.parsed_cars_links:
+                headline = car.css("*.headline.ellipsisText::text").extract_first()
 
-            loader = AutoLoader(item=AutoItem(), selector=car)
-            loader.add_value('brand', brand)
-            loader.add_value('model', model)
-            loader.add_value('title', self.get_title(brand, model, headline))
-            loader.add_css('price', "span.priceBig::text", re='\S+')
+                loader = AutoLoader(item=AutoItem(), selector=car)
+                loader.add_value('brand', brand)
+                loader.add_value('model', model)
+                loader.add_value('title', self.get_title(brand, model, headline))
+                loader.add_css('price', "span.priceBig::text", re='\S+')
 
-            loader.add_value('details_link', self.ORIGIN_LINK)
-            loader.add_css('details_link', "a.vehicleOffersBox::attr(href)")
+                loader.add_value('details_link', self.ORIGIN_LINK)
+                loader.add_value('details_link', details_link)
 
-            loader.add_css('image_url', "div.iconView img.image::attr(src)")
+                loader.add_css('image_url', "div.iconView img.image::attr(src)")
 
-            vehicle_data_loader = loader.nested_css("div.technicalData")
-            vehicle_data_loader.add_css('reg_date', "span[data-content*=registrationDate]::text")
-            vehicle_data_loader.add_css('mileage', "span[data-content*=mileage]::text")
-            vehicle_data_loader.add_css('fuel_type', "span[data-content*=fuelType]::text")
-            vehicle_data_loader.add_css('fuel_consumption', "div::text", re='\S+ l/100km')
-            vehicle_data_loader.add_css('co2_emission', "div::text", re='\S+ CO2/km')
-            vehicle_data_loader.add_css('power', "span[data-content*=power]::text")
-            vehicle_data_loader.add_css('gearbox_type', "span[data-content*=gearbox]::text")
-            vehicle_data_loader.add_css('state', "span[data-content*=vehicleType]::text")
+                vehicle_data_loader = loader.nested_css("div.technicalData")
+                vehicle_data_loader.add_css('reg_date', "span[data-content*=registrationDate]::text")
+                vehicle_data_loader.add_css('mileage', "span[data-content*=mileage]::text")
+                vehicle_data_loader.add_css('fuel_type', "span[data-content*=fuelType]::text")
+                vehicle_data_loader.add_css('fuel_consumption', "div::text", re='\S+ l/100km')
+                vehicle_data_loader.add_css('co2_emission', "div::text", re='\S+ CO2/km')
+                vehicle_data_loader.add_css('power', "span[data-content*=power]::text")
+                vehicle_data_loader.add_css('gearbox_type', "span[data-content*=gearbox]::text")
+                vehicle_data_loader.add_css('state', "span[data-content*=vehicleType]::text")
 
-            seller_loader = loader.nested_css('div.vehicleOffersDealer div p:nth-child(2)')
-            seller_loader.add_css('seller_company', 'p:nth-child(2)::text')
-            seller_loader.add_css('seller_location', 'span[data-content*=city]::text')
-            seller_loader.add_css('seller_phone', "p:nth-child(2)::text")
+                seller_loader = loader.nested_css('div.vehicleOffersDealer div p:nth-child(2)')
+                seller_loader.add_css('seller_company', 'p:nth-child(2)::text')
+                seller_loader.add_css('seller_location', 'span[data-content*=city]::text')
+                seller_loader.add_css('seller_phone', "p:nth-child(2)::text")
 
-            link = loader.get_collected_values("details_link")
-            if link not in self.parsed_cars_links:
-                self.parsed_cars_links.append(link)
+                self.parsed_cars_links.append(details_link)
                 yield loader.load_item()
 
         next_page = response.css("div.pagNext a.icon-right-dir::attr(href)").extract_first()
