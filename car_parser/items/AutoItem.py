@@ -2,10 +2,11 @@ import scrapy
 
 
 class AutoItem(scrapy.Item):
-    brand = scrapy.Field()
-    model = scrapy.Field()
+    id = scrapy.Field()
     title = scrapy.Field()
-    price = scrapy.Field()
+    price_brutto = scrapy.Field()
+    price_netto = scrapy.Field()
+
     details_link = scrapy.Field()
     image_url = scrapy.Field()
 
@@ -14,7 +15,8 @@ class AutoItem(scrapy.Item):
     fuel_type = scrapy.Field()
     fuel_consumption = scrapy.Field()
     co2_emission = scrapy.Field()
-    power = scrapy.Field()
+    power_kW = scrapy.Field()
+    power_PS = scrapy.Field()
     gearbox_type = scrapy.Field()
     state = scrapy.Field()
 

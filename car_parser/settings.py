@@ -57,17 +57,17 @@ ROBOTSTXT_OBEY = False
 
 # Enable or disable downloader middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
-DOWNLOADER_MIDDLEWARES_BASE = {
-    'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': 100,
-    'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware': 200,
-    'scrapy.downloadermiddlewares.retry.RetryMiddleware': 300,
-    'scrapy.downloadermiddlewares.redirect.RedirectMiddleware': 400,
-    'scrapy.downloadermiddlewares.stats.DownloaderStats': 500,
-}
+# DOWNLOADER_MIDDLEWARES_BASE = {
+#     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': 100,
+#     'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware': 200,
+#     'scrapy.downloadermiddlewares.retry.RetryMiddleware': 300,
+#     'scrapy.downloadermiddlewares.redirect.RedirectMiddleware': 400,
+#     'scrapy.downloadermiddlewares.stats.DownloaderStats': 500,
+# }
 
 # Change RetryMiddleware default setting
-RETRY_TIMES = 10
-RETRY_HTTP_CODES = [500, 502, 503, 504, 408, 400]
+# RETRY_TIMES = 10
+# RETRY_HTTP_CODES = [500, 502, 503, 504, 408, 400]
 
 # Enable or disable extensions
 # See http://scrapy.readthedocs.org/en/latest/topics/extensions.html
