@@ -15,9 +15,7 @@ class AutoParser(scrapy.Spider):
 
     collection_name = 'auto_collection'
 
-    ORIGIN_LINK = u"http://www.auto.de"
-
-    parsed_cars_links = list()
+    parsed_cars_links = set()
 
     def parse(self, response):
         cars = response.css("ul.vehicleOffers.vehicleList li.contentDesc")
@@ -40,7 +38,7 @@ class AutoParser(scrapy.Spider):
                 vehicle_data_loader.add_css('gearbox', "span[data-content*=gearbox]::text")
                 vehicle_data_loader.add_css('first_registration', "span[data-content*=registrationDate]::text", re="EZ (?P<extract>.*)")
 
-                self.parsed_cars_links.append(details_link)
+                self.parsed_cars_links.add(details_link)
                 yield loader.load_item()
 
         next_page = response.css("div.pagNext a.icon-right-dir::attr(href)").extract_first()
