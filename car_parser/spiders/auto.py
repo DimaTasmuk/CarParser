@@ -1,5 +1,4 @@
 # coding=utf-8
-import re
 import scrapy
 from scrapy import Request
 
