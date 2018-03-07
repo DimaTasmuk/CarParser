@@ -68,8 +68,8 @@ LOG_LEVEL = "INFO"
 # }
 
 # Change RetryMiddleware default setting
-RETRY_TIMES = 10
-RETRY_HTTP_CODES = [500, 502, 503, 504, 408, 400]
+# RETRY_TIMES = 10
+# RETRY_HTTP_CODES = [500, 502, 503, 504, 408, 400]
 
 # Enable or disable extensions
 # See http://scrapy.readthedocs.org/en/latest/topics/extensions.html
