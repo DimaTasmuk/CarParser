@@ -28,6 +28,8 @@ ROBOTSTXT_OBEY = False
 
 LOG_LEVEL = "INFO"
 
+COOKIES_ENABLED = False
+
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
 
@@ -59,13 +61,13 @@ LOG_LEVEL = "INFO"
 
 # Enable or disable downloader middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
-# DOWNLOADER_MIDDLEWARES_BASE = {
-#     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': 100,
-#     'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware': 200,
-#     'scrapy.downloadermiddlewares.retry.RetryMiddleware': 300,
-#     'scrapy.downloadermiddlewares.redirect.RedirectMiddleware': 400,
-#     'scrapy.downloadermiddlewares.stats.DownloaderStats': 500,
-# }
+DOWNLOADER_MIDDLEWARES_BASE = {
+    'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': 100,
+    'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware': 200,
+    'scrapy.downloadermiddlewares.retry.RetryMiddleware': 300,
+    'scrapy.downloadermiddlewares.redirect.RedirectMiddleware': 400,
+    'scrapy.downloadermiddlewares.stats.DownloaderStats': 500,
+}
 
 # Change RetryMiddleware default setting
 # RETRY_TIMES = 10

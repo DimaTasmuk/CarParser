@@ -8,6 +8,9 @@ from car_parser.loaders.AutoLoader import AutoLoader
 
 # Spider call structure: scrapy crawl <name> -o <output file> -a <arguments>
 # Spider call example: scrapy crawl auto_parser -o xml_files\auto_parser.xml -a deep=true
+# Spider call example: scrapy crawl auto_parser -o xml_files\auto_parser.xml -a deep=false
+
+
 class AutoParser(scrapy.Spider):
     def parse(self, response):
         pass
