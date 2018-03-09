@@ -7,6 +7,7 @@ class AutoItem(scrapy.Item):
     marketing_headline = scrapy.Field()
     sales_price_incl_vat = scrapy.Field()
     sales_price_excl_vat = scrapy.Field()
+    currency = scrapy.Field()
     body_type = scrapy.Field()
     mileage = scrapy.Field()
     cubic_capacity = scrapy.Field()

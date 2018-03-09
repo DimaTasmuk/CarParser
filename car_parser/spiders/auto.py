@@ -57,6 +57,7 @@ class AutoParser(scrapy.Spider):
                 loader.add_css('marketing_headline', "*.headline.ellipsisText::text")
                 loader.add_css('sales_price_incl_vat', "span.priceBig::text", re='\S+')
                 loader.add_css('sales_price_excl_vat', "div.priceBox::text", re='\S+')
+                loader.add_css('currency', "span.priceBig::text")
 
                 vehicle_data_loader = loader.nested_css("div.technicalData")
                 vehicle_data_loader.add_css('mileage', "span[data-content*=mileage]::text", re="(?P<extract>.*) km")
@@ -97,6 +98,7 @@ class AutoParser(scrapy.Spider):
             loader.add_xpath('marketing_headline', "//dt[@data-content='modelVariant']/following-sibling::dd[1]/text()")
             loader.add_css('sales_price_incl_vat', "span.priceBig::text", re="\S+")
             loader.add_css('sales_price_excl_vat', "td.priceInfo::text", re="\S+")
+            loader.add_css('currency', "span.priceBig::text")
             loader.add_xpath('body_type', "//dt[@data-content='bodyType']/following-sibling::dd[1]/text()")
             loader.add_xpath('mileage', "//td[@data-content='mileage']/text()", re="\S+")
             loader.add_xpath('cubic_capacity', "//dt[@data-content='cubicCapacity']/following-sibling::dd[1]/text()",
