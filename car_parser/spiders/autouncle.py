@@ -10,10 +10,10 @@ from .literals.autouncle import *
 
 
 class AutoUncleParser(scrapy.Spider):
+    table_name = "AutoUncle"
+
     name = "autouncle"
     start_urls = ["https://www.autouncle.de/de/gebrauchtwagen/"]
-
-    collection_name = 'autouncle_collection'
 
     deep_parse_enabled = False
 
@@ -141,14 +141,14 @@ class AutoUncleParser(scrapy.Spider):
 
     def parse_car(self, response):
         for car in response.css("div.car-list-item div.car-details-wrapper"):
-            details_link = car.css("h3.car-title a::attr(href)").extract_first()
-            if details_link not in self.adverts:
+            origin_link = car.css("h3.car-title a::attr(href)").extract_first()
+            if origin_link not in self.adverts:
                 model = self.replace_inconvenient_symbols(
                     self.get_string_value_by_parameter(response.url,
                                                        PARAMETERS['model'])
                 )
                 if self.deep_parse_enabled:
-                    request = scrapy.Request(response.urljoin(details_link),
+                    request = scrapy.Request(response.urljoin(origin_link),
                                              self.parse_car_details)
                     request.meta['meta_model'] = model
                     yield request
@@ -156,12 +156,12 @@ class AutoUncleParser(scrapy.Spider):
                     item = dict()
 
                     item['model'] = model
-                    item['details_link'] = ORIGIN_LINK + details_link
+                    item['origin_link'] = ORIGIN_LINK + origin_link
 
                     self.fill_search_page_fields(item, car)
 
                     yield item
-                self.adverts.add(details_link)
+                self.adverts.add(origin_link)
 
         url = response.css(
             "div.pagination-container span.next a::attr(href)"
@@ -182,7 +182,7 @@ class AutoUncleParser(scrapy.Spider):
 
         item = dict()
         item['model'] = model
-        item['details_link'] = response.url
+        item['origin_link'] = response.url
 
         self.fill_search_page_fields(item, car)
 
@@ -237,43 +237,32 @@ class AutoUncleParser(scrapy.Spider):
 
     def fill_search_page_fields(self, item, car):
         item['make'] = car.css("h3.car-title span b::text").extract_first()
-        item['title'] = car.css('h3.car-title span span::text').extract_first()
-        item['price'] = car.css(
-            "div.pricing span.price::attr(content)"
-        ).extract_first()
-        item['currency'] = car.css(
-            'div.pricing meta::attr(content)'
-        ).extract_first()
-        item['image_url'] = car.css(
-            "div.picture.left-half a.colorbox::attr(href)"
-        ).extract_first()
-        item['reg_date'] = car.css("ul li.year span::text").extract_first()
-        item['mileage'] = car.css("ul li.km span::text").extract_first()
+        item['sales_price_excl_vat'] = int(car.css("div.pricing span.price::attr(content)").extract_first())
+        item['currency'] = car.css('div.pricing span.price::text').extract_first().split(" ")[0].strip()
+        # item['image_url'] = car.css(
+        #     "div.picture.left-half a.colorbox::attr(href)"
+        # ).extract_first()
+        item['first_registration'] = car.css("ul li.year span::text").extract_first()
+        item['mileage'] = int(car.css("ul li.km span::text").extract_first().strip().replace('.', ''))
         item['cubic_capacity'] = self.get_cubic_capacity(car)
-        item['fuel_type'] = self.get_fuel_type(car)
-        item['fuel_consumption'] = car.css(
-            "ul li.fuel_efficiency span span::text").extract_first()
-        item['co2_emission'] = car.css(
-            "ul li.co2_emission span::text"
-        ).extract_first()
-        item['energy_efficienty_class'] = car.css(
-            "ul li.co2_class span::text"
-        ).extract_first()
-        item['power'] = car.css("ul li.hp span::text").extract_first()
-        item['co2_emission_class'] = car.css(
-            'ul li.euro_emission_class span::text'
-        ).extract_first()
-        item['location'] = car.css("ul li.location span::text").extract_first()
+        item['fuel'] = self.get_fuel_type(car)
+        item['fuel_consumption_comb'] = car.css("ul li.fuel_efficiency span span::text").extract_first()
+        item['co2_emission'] = car.css("ul li.co2_emission span::text").extract_first().split(" ")[0]
+        item['energy_efficiency_class'] = car.css("ul li.co2_class span::text").extract_first()
+        item['power_in_ps'] = car.css("ul li.hp span::text").extract_first().split(" ")[0]
+        item['emission_class'] = car.css('ul li.euro_emission_class dfn::text').extract_first() + " " + \
+                                 car.css('ul li.euro_emission_class span::text').extract_first()
+        # item['location'] = car.css("ul li.location span::text").extract_first()
 
         item['marketing_headline'] = None
         try:
-            headline = item['title']
+            headline = car.css('h3.car-title span span::text').extract_first()
             headline = headline.replace(item['make'], '', 1)
             headline = headline.replace(item['model'], '', 1)
             headline = headline.strip()
             item['marketing_headline'] = headline
         except AttributeError:
-            print(item['details_link'])
+            print(item['origin_link'])
 
     def get_price_arguments(self, url):
         try:

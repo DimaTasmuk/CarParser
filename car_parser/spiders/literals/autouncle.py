@@ -7,7 +7,7 @@ PARAMETERS = {
     'color': '&s%5Bcolors%5D%5B%5D=',
 }
 
-ORIGIN_LINK = u"www.autouncle.de"
+ORIGIN_LINK = u"https://www.autouncle.de"
 
 MIN_PRICE = 0
 MAX_PRICE = 10000000
