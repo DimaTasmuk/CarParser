@@ -2,6 +2,7 @@ import scrapy
 
 
 class AutoItem(scrapy.Item):
+    origin_link = scrapy.Field()
     make = scrapy.Field()
     model = scrapy.Field()
     marketing_headline = scrapy.Field()
