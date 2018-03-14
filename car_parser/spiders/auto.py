@@ -12,13 +12,11 @@ from car_parser.loaders.AutoLoader import AutoLoader
 
 
 class AutoParser(scrapy.Spider):
-    def parse(self, response):
-        pass
+    table_name = "Auto"
 
     name = "auto_parser"
-    start_url = "http://www.auto.de/search/findoffer?sci%5B%5D=&spra=&sma=&sg=&srdi=&sft=&sz=&src=1&" \
-                "vt%5B%5D=1&vt%5B%5D=2&vt%5B%5D=3&vt%5B%5D=4&vt%5B%5D=5&vt%5B%5D=6&vt%5B%5D=7&"\
-                "vt%5B%5D=8&vt%5B%5D=99&searchFast=Fahrzeug+suchen&srtcbd=0_asc"
+
+    start_url = 'http://www.auto.de/search/findoffer'
 
     ORIGIN_LINK = u"http://www.auto.de"
 
@@ -46,13 +44,18 @@ class AutoParser(scrapy.Spider):
             print("Shallow parse")
             return [Request(self.start_url, self.shallow_parse)]
 
+    # Just need to implement
+    def parse(self, response):
+        pass
+
     # Start shallow parse
     def shallow_parse(self, response):
         cars = response.css("ul.vehicleOffers.vehicleList li.offers.size1of1.contentDesc")
         for car in cars:
-            details_link = car.css("a.vehicleOffersBox::attr(href)").extract_first()
-            if details_link not in self.parsed_cars_links:
+            origin_link = car.css("a.vehicleOffersBox::attr(href)").extract_first()
+            if origin_link not in self.parsed_cars_links:
                 loader = AutoLoader(item=AutoItem(), selector=car)
+                loader.add_value('origin_link', unicode(origin_link))
                 loader.add_css('id', "li::attr(data-id)")
                 loader.add_css('marketing_headline', "*.headline.ellipsisText::text")
                 loader.add_css('sales_price_incl_vat', "span.priceBig::text", re='\S+')
@@ -70,7 +73,7 @@ class AutoParser(scrapy.Spider):
                 vehicle_data_loader.add_css('first_registration', "span[data-content*=registrationDate]::text",
                                             re="EZ (?P<extract>.*)")
 
-                self.parsed_cars_links.add(details_link)
+                self.parsed_cars_links.add(origin_link)
                 yield loader.load_item()
 
         next_page = response.css("div.pagNext a.icon-right-dir::attr(href)").extract_first()
@@ -93,6 +96,7 @@ class AutoParser(scrapy.Spider):
         if response.url not in self.parsed_cars_links:
             loader = AutoLoader(item=AutoItem(), response=response)
 
+            loader.add_value('origin_link', unicode(response.url))
             loader.add_xpath('make', "//dt[@data-content='brand']/following-sibling::dd[1]/text()")
             loader.add_xpath('model', "//dt[@data-content='model']/following-sibling::dd[1]/text()")
             loader.add_xpath('marketing_headline', "//dt[@data-content='modelVariant']/following-sibling::dd[1]/text()")
