@@ -1,7 +1,11 @@
 # coding=utf-8
+import decimal
 
 import scrapy
 import re
+
+from car_parser.items import AutoUncleItem
+from car_parser.loaders import AutoUncleLoader
 from .literals.autouncle import *
 
 # Spider call structure: scrapy crawl <name> -o <output file> -a <arguments>
@@ -153,14 +157,13 @@ class AutoUncleParser(scrapy.Spider):
                     request.meta['meta_model'] = model
                     yield request
                 else:
-                    item = dict()
+                    loader = AutoUncleLoader(item=AutoUncleItem(), selector=car)
+                    loader.add_value('model', unicode(model))
+                    loader.add_value('origin_link', unicode(ORIGIN_LINK + origin_link))
 
-                    item['model'] = model
-                    item['origin_link'] = ORIGIN_LINK + origin_link
+                    self.fill_search_page_fields(loader, car)
 
-                    self.fill_search_page_fields(item, car)
-
-                    yield item
+                    yield loader.load_item()
                 self.adverts.add(origin_link)
 
         url = response.css(
@@ -180,19 +183,18 @@ class AutoUncleParser(scrapy.Spider):
         model = response.meta['meta_model']
         car = response.css("div.car-list-item div.car-details-wrapper")
 
-        item = dict()
-        item['model'] = model
-        item['origin_link'] = response.url
+        loader = AutoUncleLoader(item=AutoUncleItem(), selector=car)
+        loader.add_value('model', unicode(model))
+        loader.add_value('origin_link', unicode(response.url))
 
-        self.fill_search_page_fields(item, car)
+        self.fill_search_page_fields(loader, car)
 
         car_tags = self.get_tags(response)
         for key in TAGS.keys():
-            item[key] = None
             for tag in TAGS[key]:
                 if tag in car_tags:
-                    item[key] = tag
-        yield item
+                    loader.add_value(key, tag)
+        yield loader.load_item()
 
     def load_tags(self, response):
         top_tags = response.css(
@@ -235,34 +237,28 @@ class AutoUncleParser(scrapy.Spider):
             .replace(',', '') \
             .replace(' ', '+')
 
-    def fill_search_page_fields(self, item, car):
-        item['make'] = car.css("h3.car-title span b::text").extract_first()
-        item['sales_price_excl_vat'] = int(car.css("div.pricing span.price::attr(content)").extract_first())
-        item['currency'] = car.css('div.pricing span.price::text').extract_first().split(" ")[0].strip()
-        # item['image_url'] = car.css(
-        #     "div.picture.left-half a.colorbox::attr(href)"
-        # ).extract_first()
-        item['first_registration'] = car.css("ul li.year span::text").extract_first()
-        item['mileage'] = int(car.css("ul li.km span::text").extract_first().strip().replace('.', ''))
-        item['cubic_capacity'] = self.get_cubic_capacity(car)
-        item['fuel'] = self.get_fuel_type(car)
-        item['fuel_consumption_comb'] = car.css("ul li.fuel_efficiency span span::text").extract_first()
-        item['co2_emission'] = car.css("ul li.co2_emission span::text").extract_first().split(" ")[0]
-        item['energy_efficiency_class'] = car.css("ul li.co2_class span::text").extract_first()
-        item['power_in_ps'] = car.css("ul li.hp span::text").extract_first().split(" ")[0]
-        item['emission_class'] = car.css('ul li.euro_emission_class dfn::text').extract_first() + " " + \
-                                 car.css('ul li.euro_emission_class span::text').extract_first()
-        # item['location'] = car.css("ul li.location span::text").extract_first()
+    def fill_search_page_fields(self, loader, car):
+        loader.add_css('make', "h3.car-title span b::text")
+        loader.add_css('sales_price_excl_vat', "div.pricing span.price::attr(content)")
+        loader.add_css('currency', "div.pricing span.price::text")
+        loader.add_css('first_registration', "ul li.year span::text")
+        loader.add_css('mileage', "ul li.km span::text")
+        loader.add_value('cubic_capacity', unicode(self.get_cubic_capacity(car)))
+        loader.add_value('fuel', self.get_fuel_type(car))
+        loader.add_css('fuel_consumption_comb', 'ul li.fuel_efficiency span span::text')
+        loader.add_css('co2_emission', 'ul li.co2_emission span::text')
+        loader.add_css('energy_efficiency_class', 'ul li.co2_class span::text')
+        loader.add_css('power_in_ps', 'ul li.hp span::text')
+        loader.add_value('emission_class', car.css('ul li.euro_emission_class dfn::text').extract_first())
+        loader.add_value('emission_class', car.css('ul li.euro_emission_class span::text').extract_first())
 
-        item['marketing_headline'] = None
         try:
             headline = car.css('h3.car-title span span::text').extract_first()
-            headline = headline.replace(item['make'], '', 1)
-            headline = headline.replace(item['model'], '', 1)
-            headline = headline.strip()
-            item['marketing_headline'] = headline
+            headline = headline.replace(loader.get_value('make'), '', 1)
+            headline = headline.replace(loader.get_value('model'), '', 1)
+            loader.add_value('marketing_headline', headline)
         except AttributeError:
-            print(item['origin_link'])
+            print(loader.get_value('origin_link'))
 
     def get_price_arguments(self, url):
         try:
@@ -291,7 +287,7 @@ class AutoUncleParser(scrapy.Spider):
         if value is None:
             return None
         value = value.group(0)
-        return float(value)
+        return decimal.Decimal(value)
 
     @staticmethod
     def get_fuel_type(response):
