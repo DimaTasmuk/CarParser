@@ -6,7 +6,7 @@ class AutoUncleItem(scrapy.Item):
     make = scrapy.Field()
     model = scrapy.Field()
     marketing_headline = scrapy.Field()
-    sales_price_excl_vat = scrapy.Field()
+    sales_price_incl_vat = scrapy.Field()
     currency = scrapy.Field()
     mileage = scrapy.Field()
     cubic_capacity = scrapy.Field()

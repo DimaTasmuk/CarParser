@@ -152,15 +152,18 @@ class AutoScoutParser(Spider):
 
         if self.deep_parse_enabled:
             for url in response.xpath(COMMON_XPATH['car_link']):
-                yield self.create_parse_request(response.url, url.extract())
+                yield self.create_deep_parse_request(response.url, url.extract())
 
     # Create parse request
-    def create_parse_request(self, old_url, new_url):
+    def create_deep_parse_request(self, old_url, new_url):
         new_url = urljoin(old_url, new_url)
         for parameter in ['brand', 'model']:
             value = get_parameter(old_url, PARAMETERS[parameter])
             new_url = set_parameter(new_url, PARAMETERS[parameter], value)
-        return Request(new_url, self.deep_parse)
+        return self.parse_car_by_url(new_url)
+
+    def parse_car_by_url(self, url):
+        return Request(url, self.deep_parse)
 
     # Parse records from page
     def shallow_parse(self, response):

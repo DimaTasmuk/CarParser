@@ -239,7 +239,7 @@ class AutoUncleParser(scrapy.Spider):
 
     def fill_search_page_fields(self, loader, car):
         loader.add_css('make', "h3.car-title span b::text")
-        loader.add_css('sales_price_excl_vat', "div.pricing span.price::attr(content)")
+        loader.add_css('sales_price_incl_vat', "div.pricing span.price::attr(content)")
         loader.add_css('currency', "div.pricing span.price::text")
         loader.add_css('first_registration', "ul li.year span::text")
         loader.add_css('mileage', "ul li.km span::text")

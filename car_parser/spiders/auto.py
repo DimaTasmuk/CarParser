@@ -39,7 +39,7 @@ class AutoParser(scrapy.Spider):
         if self.deep_parse_enabled:
             print("Deep parse")
             self.settings.attributes["DUPEFILTER_CLASS"].value = 'scrapy.dupefilters.BaseDupeFilter'
-            return [Request(self.start_url, self.deep_parse)]
+            return [Request(self.start_url, self.create_deep_parse_requests)]
         else:
             print("Shallow parse")
             return [Request(self.start_url, self.shallow_parse)]
@@ -81,17 +81,19 @@ class AutoParser(scrapy.Spider):
             yield response.follow(next_page, self.shallow_parse)
 
     # Start deep parse for all items
-    def deep_parse(self, response):
+    def create_deep_parse_requests(self, response):
         for item in response.css('ul.vehicleOffers.vehicleList li.offers.size1of1.contentDesc'):
-            yield response.follow(self.ORIGIN_LINK + item.css('a.vehicleOffersBox::attr(href)').extract_first(),
-                                  self.parse_one_car)
+            yield self.parse_car_by_url(self.ORIGIN_LINK + item.css('a.vehicleOffersBox::attr(href)').extract_first())
 
         next_page = response.css("div.pagNext a.icon-right-dir::attr(href)").extract_first()
         if next_page is not None:
-            yield response.follow(next_page, self.deep_parse)
+            yield response.follow(next_page, self.create_deep_parse_requests)
+
+    def parse_car_by_url(self, url):
+        return Request(url, self.deep_parse)
 
     # Parse single car for deep_parse
-    def parse_one_car(self, response):
+    def deep_parse(self, response):
         # Check that this item was parsed
         if response.url not in self.parsed_cars_links:
             loader = AutoLoader(item=AutoItem(), response=response)
