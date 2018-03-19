@@ -32,6 +32,7 @@ class AutoUncleParser(scrapy.Spider):
         super(AutoUncleParser, self).__init__(**kwargs)
         if hasattr(self, 'deep'):
             if self.deep.lower() == 'true':
+                self.logger.infp("deep parse enabled")
                 self.deep_parse_enabled = True
 
     def parse(self, response):
@@ -152,6 +153,7 @@ class AutoUncleParser(scrapy.Spider):
                                                        PARAMETERS['model'])
                 )
                 if self.deep_parse_enabled:
+                    self.logger.infp("in parse car")
                     request = scrapy.Request(response.urljoin(origin_link),
                                              self.parse_car_details)
                     request.meta['meta_model'] = model
@@ -182,6 +184,7 @@ class AutoUncleParser(scrapy.Spider):
     def parse_car_details(self, response):
         model = response.meta['meta_model']
         car = response.css("div.car-list-item div.car-details-wrapper")
+        self.logger.infp(response.url)
 
         loader = AutoUncleLoader(item=AutoUncleItem(), selector=car)
         loader.add_value('model', unicode(model))
