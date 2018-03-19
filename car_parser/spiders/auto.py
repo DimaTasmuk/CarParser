@@ -52,7 +52,7 @@ class AutoParser(scrapy.Spider):
     def shallow_parse(self, response):
         cars = response.css("ul.vehicleOffers.vehicleList li.offers.size1of1.contentDesc")
         for car in cars:
-            origin_link = car.css("a.vehicleOffersBox::attr(href)").extract_first()
+            origin_link = self.ORIGIN_LINK + car.css("a.vehicleOffersBox::attr(href)").extract_first()
             if origin_link not in self.parsed_cars_links:
                 loader = AutoLoader(item=AutoItem(), selector=car)
                 loader.add_value('origin_link', unicode(origin_link))
