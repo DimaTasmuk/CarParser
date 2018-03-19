@@ -14,6 +14,9 @@ SCRAPY_PROJECT_ID = "266968"
 MONGO_URI = 'mongodb://Dima:Dima@ds153577.mlab.com:53577/autostore'
 MONGO_DATABASE = 'autostore'
 
+DYNAMO_ENDPOINT = "http://localhost:8000"
+DYNAMO_REGION = 'eu-central-1'
+
 BOT_NAME = 'car_parser'
 
 SPIDER_MODULES = ['car_parser.spiders']
@@ -28,8 +31,8 @@ USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
 
-LOG_LEVEL = "INFO"
-# LOG_LEVEL = "DEBUG"
+# LOG_LEVEL = "INFO"
+LOG_LEVEL = "DEBUG"
 
 COOKIES_ENABLED = False
 

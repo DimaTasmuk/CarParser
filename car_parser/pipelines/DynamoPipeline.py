@@ -7,7 +7,7 @@ from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 from dateutil import tz
 
-from settings import DYNAMO_ENDPOINT, DYNAMO_REGION
+from car_parser.settings import DYNAMO_ENDPOINT, DYNAMO_REGION
 
 if os.name == 'nt':
     def _naive_is_dst(self, dt):

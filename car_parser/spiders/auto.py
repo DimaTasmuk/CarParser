@@ -26,6 +26,7 @@ class AutoParser(scrapy.Spider):
     }
 
     deep_parse_enabled = False
+    links_to_deep_parse = set()
 
     parsed_cars_links = set()
 
@@ -34,6 +35,8 @@ class AutoParser(scrapy.Spider):
         # Set as argument
         if hasattr(self, 'deep') and self.deep.lower() == 'true':
             self.deep_parse_enabled = True
+        if hasattr(self, 'deep_links') and len(self.deep_links) > 0:
+            self.links_to_deep_parse = self.deep_links.split(',')
 
     def start_requests(self):
         if self.deep_parse_enabled:
@@ -76,9 +79,9 @@ class AutoParser(scrapy.Spider):
                 self.parsed_cars_links.add(origin_link)
                 yield loader.load_item()
 
-        next_page = response.css("div.pagNext a.icon-right-dir::attr(href)").extract_first()
-        if next_page is not None:
-            yield response.follow(next_page, self.shallow_parse)
+        # next_page = response.css("div.pagNext a.icon-right-dir::attr(href)").extract_first()
+        # if next_page is not None:
+        #     yield response.follow(next_page, self.shallow_parse)
 
     # Start deep parse for all items
     def create_deep_parse_requests(self, response):

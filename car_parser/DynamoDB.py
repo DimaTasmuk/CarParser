@@ -1,7 +1,5 @@
 import boto3
-from boto3.dynamodb.conditions import Key, Attr
-
-from settings import DYNAMO_ENDPOINT, DYNAMO_REGION
+from boto3.dynamodb.conditions import Key
 
 
 class DynamoDB(object):
@@ -12,8 +10,8 @@ class DynamoDB(object):
 
     new_items = set()
 
-    def __init__(self, table_name):
-        self.dynamodb = boto3.resource('dynamodb', region_name=DYNAMO_REGION, endpoint_url=DYNAMO_ENDPOINT)
+    def __init__(self, table_name, dynamo_endpoint, dynamo_region):
+        self.dynamodb = boto3.resource('dynamodb', region_name=dynamo_region, endpoint_url=dynamo_endpoint)
         self.table = self.dynamodb.Table(table_name)
         super(DynamoDB, self).__init__()
 
