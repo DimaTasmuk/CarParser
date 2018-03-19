@@ -1,20 +1,23 @@
 import boto3
-from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Key, Attr
+
+from settings import DYNAMO_ENDPOINT, DYNAMO_REGION
 
 
 class DynamoDB(object):
 
-    dynamodb = boto3.resource('dynamodb', region_name='eu-central-1', endpoint_url="http://localhost:8000")
+    dynamodb = None
 
     table = None
 
     new_items = set()
 
     def __init__(self, table_name):
+        self.dynamodb = boto3.resource('dynamodb', region_name=DYNAMO_REGION, endpoint_url=DYNAMO_ENDPOINT)
         self.table = self.dynamodb.Table(table_name)
         super(DynamoDB, self).__init__()
 
-    def structuring_data(self):
+    def structure_data(self):
         synced_items = self.table.query(
             ProjectionExpression="origin_link",
             KeyConditionExpression=Key('is_synced').eq(1)
@@ -31,19 +34,19 @@ class DynamoDB(object):
             self.remove_certain_items(synced_items)
 
         # Add origin_link of not_synced_items to new_item's set for deep parsing these adverts
-        not_synced_items = self.table.query(
+        just_parsed_items = self.table.query(
             ProjectionExpression="origin_link",
             KeyConditionExpression=Key('is_synced').eq(0)
         )
 
-        self.new_items.update([i.get('origin_link') for i in not_synced_items['Items']])
-        while 'LastEvaluatedKey' in not_synced_items:
-            not_synced_items = self.table.query(
+        self.new_items.update([i.get('origin_link') for i in just_parsed_items['Items']])
+        while 'LastEvaluatedKey' in just_parsed_items:
+            just_parsed_items = self.table.query(
                 ProjectionExpression="origin_link",
                 KeyConditionExpression=Key('is_synced').eq(0),
-                ExclusiveStartKey=not_synced_items['LastEvaluatedKey']
+                ExclusiveStartKey=just_parsed_items['LastEvaluatedKey']
             )
-            self.new_items.update([i.get('origin_link') for i in not_synced_items['Items']])
+            self.new_items.update([i.get('origin_link') for i in just_parsed_items['Items']])
 
     def remove_certain_items(self, synced_items):
         """

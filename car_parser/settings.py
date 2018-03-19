@@ -8,6 +8,8 @@
 #     http://doc.scrapy.org/en/latest/topics/settings.html
 #     http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 #     http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
+SCRAPY_API_KEY = "b86dfa67fd4647dca2451627d5ff4a72"
+SCRAPY_PROJECT_ID = "266968"
 
 MONGO_URI = 'mongodb://Dima:Dima@ds153577.mlab.com:53577/autostore'
 MONGO_DATABASE = 'autostore'

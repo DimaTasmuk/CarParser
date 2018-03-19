@@ -7,6 +7,8 @@ from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 from dateutil import tz
 
+from settings import DYNAMO_ENDPOINT, DYNAMO_REGION
+
 if os.name == 'nt':
     def _naive_is_dst(self, dt):
         timestamp = tz.tz._datetime_to_timestamp(dt)
@@ -23,7 +25,7 @@ if os.name == 'nt':
 class DynamoPipeline(object):
 
     def __init__(self):
-        self.dynamodb = boto3.resource('dynamodb', region_name='eu-central-1', endpoint_url="http://localhost:8000")
+        self.dynamodb = boto3.resource('dynamodb', region_name=DYNAMO_REGION, endpoint_url=DYNAMO_ENDPOINT)
         self.table = None
 
     def open_spider(self, spider):
@@ -31,11 +33,7 @@ class DynamoPipeline(object):
 
     def process_item(self, item, spider):
         origin_link = item.get('origin_link')
-        info = dict(item)
-        info.pop('origin_link')
-        for key, field in info.items():
-            if field is None or field == "":
-                info.pop(key)
+        info = item.get('sales_price_incl_vat')
         response = self.table.query(
             ProjectionExpression="origin_link, is_synced",
             KeyConditionExpression=Key('origin_link').eq(origin_link) & Key('is_synced').eq(0)
@@ -54,3 +52,6 @@ class DynamoPipeline(object):
         except Exception as e:
             print(e)
         return item
+
+    def close_spider(self, spider):
+        pass
