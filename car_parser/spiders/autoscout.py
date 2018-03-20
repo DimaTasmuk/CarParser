@@ -175,7 +175,7 @@ class AutoScoutParser(Spider):
         for car in response.xpath(COMMON_XPATH['car']):
             record = dict()
 
-            record['origin_link'] = car.xpath(
+            record['origin_link'] = ORIGIN_LINK + car.xpath(
                 SHALLOW_PARSE_FIELDS_XPATH['origin_link']
             ).extract_first()
             record['new_url'] = record['origin_link']
@@ -226,6 +226,8 @@ class AutoScoutParser(Spider):
         data = response.xpath('//main')
         for field, xpath in DEEP_PARSE_FIELDS_XPATH.items():
             record[field] = data.xpath(xpath.decode("utf-8")).extract_first()
+            if record[field] is not None:
+                record[field] = record[field].strip()
 
         # Parking sensors
         parking_equipments = []

@@ -1,8 +1,11 @@
 # coding=utf-8
 import decimal
 
+import requests
 import scrapy
 import re
+
+from scrapy import Selector
 
 from car_parser.items import AutoUncleItem
 from car_parser.loaders import AutoUncleLoader
@@ -152,16 +155,17 @@ class AutoUncleParser(scrapy.Spider):
                                                        PARAMETERS['model'])
                 )
                 if self.deep_parse_enabled:
-                    request = scrapy.Request(response.urljoin(origin_link),
-                                             self.parse_car_details)
-                    request.meta['meta_model'] = model
-                    yield request
+                    self.create_one_deep_request(response.urljoin(origin_link), model)
+                    # request = scrapy.Request(response.urljoin(origin_link),
+                    #                          self.parse_car_details)
+                    # request.cookies['meta_model'] = model
+                    # yield request
                 else:
                     loader = AutoUncleLoader(item=AutoUncleItem(), selector=car)
                     loader.add_value('model', unicode(model))
                     loader.add_value('origin_link', unicode(ORIGIN_LINK + origin_link))
 
-                    self.fill_search_page_fields(loader, car)
+                    # self.fill_search_page_fields(loader, car)
 
                     yield loader.load_item()
                 self.adverts.add(origin_link)
@@ -179,13 +183,17 @@ class AutoUncleParser(scrapy.Spider):
                 pass
             yield response.follow(url, self.parse_car)
 
-    def parse_car_details(self, response):
-        model = response.meta['meta_model']
+    def create_one_deep_request(self, link, model):
+        return self.parse_car_details(requests.get(link), model)
+
+    def parse_car_details(self, response, model):
+        origin_link = response.url
+        response = Selector(response)
         car = response.css("div.car-list-item div.car-details-wrapper")
 
         loader = AutoUncleLoader(item=AutoUncleItem(), selector=car)
         loader.add_value('model', unicode(model))
-        loader.add_value('origin_link', unicode(response.url))
+        loader.add_value('origin_link', origin_link)
 
         self.fill_search_page_fields(loader, car)
 
@@ -194,7 +202,7 @@ class AutoUncleParser(scrapy.Spider):
             for tag in TAGS[key]:
                 if tag in car_tags:
                     loader.add_value(key, tag)
-        yield loader.load_item()
+        return loader.load_item()
 
     def load_tags(self, response):
         top_tags = response.css(

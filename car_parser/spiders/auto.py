@@ -38,11 +38,11 @@ class AutoParser(scrapy.Spider):
 
     def start_requests(self):
         if self.deep_parse_enabled:
-            print("Deep parse")
+            # print("Deep parse")
             self.settings.attributes["DUPEFILTER_CLASS"].value = 'scrapy.dupefilters.BaseDupeFilter'
             return [Request(self.start_url, self.create_deep_parse_requests)]
         else:
-            print("Shallow parse")
+            # print("Shallow parse")
             return [Request(self.start_url, self.shallow_parse)]
 
     # Just need to implement
@@ -55,8 +55,8 @@ class AutoParser(scrapy.Spider):
         for car in cars:
             origin_link = self.ORIGIN_LINK + car.css("a.vehicleOffersBox::attr(href)").extract_first()
             if origin_link not in self.parsed_cars_links:
-                loader = AutoLoader(item=AutoItem(), selector=car)
-                loader.add_value('origin_link', unicode(origin_link))
+                # loader = AutoLoader(item=AutoItem(), selector=car)
+                # loader.add_value('origin_link', unicode(origin_link))
                 # loader.add_css('id', "li::attr(data-id)")
                 # loader.add_css('marketing_headline', "*.headline.ellipsisText::text")
                 # loader.add_css('sales_price_incl_vat', "span.priceBig::text", re='\S+')
@@ -75,7 +75,7 @@ class AutoParser(scrapy.Spider):
                 #                             re="EZ (?P<extract>.*)")
 
                 # self.parsed_cars_links.add(origin_link)
-                yield loader.load_item()
+                yield {'origin_link': origin_link}
 
         next_page = response.css("div.pagNext a.icon-right-dir::attr(href)").extract_first()
         if next_page is not None:
@@ -125,7 +125,7 @@ class AutoParser(scrapy.Spider):
             loader.add_xpath('co2_emission', "//dt[@data-content='co2']/following-sibling::dd[1]/text()", re="\d+")
             loader.add_css('energy_efficiency_class', "span.contentSprite.coClass::text")
             loader.add_xpath('number_of_seats', "//dt[@data-content='seatCount']/following-sibling::dd[1]/text()")
-            loader.add_xpath('number_of_doors', "//dt[@data-content='doorCount']/following-sibling::dd[1]/text()")
+            loader.add_xpath('number_of_doors', "//dt[@data-content='doorCount']/following-sibling::dd[1]/text()", re='\d+')
             loader.add_xpath('gearbox', "//td[@data-content='gearbox']/text()", re="\S+")
             loader.add_xpath('emission_class', "//dt[@data-content='contaminantType']/following-sibling::dd[1]/text()")
             loader.add_xpath('first_registration', "//td[@data-content='registrationDate']/text()",
