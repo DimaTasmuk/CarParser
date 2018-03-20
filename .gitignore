@@ -13,3 +13,7 @@ cmake-build-debug/
 
 # IntelliJ
 out/
+
+# Environment
+venv/
+*.pyc
