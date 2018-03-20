@@ -8,6 +8,9 @@ from botocore.exceptions import ClientError
 from dateutil import tz
 
 from car_parser.settings import DYNAMO_REGION
+from car_parser.spiders import AutoParser
+from car_parser.spiders.autoscout import AutoScoutParser
+from car_parser.spiders.autouncle import AutoUncleParser
 
 if os.name == 'nt':
     def _naive_is_dst(self, dt):
@@ -35,28 +38,35 @@ class DynamoPipeline(object):
 
     def process_item(self, item, spider):
         origin_link = item.get('origin_link')
-        info = dict(item)
-        info.pop('origin_link')
-        for key, field in info.items():
-            if field is None or field == "":
-                info.pop(key)
-        info['iteration_id'] = 2
+        info = dict()
         response = self.table.query(
             ProjectionExpression="origin_link, is_synced",
-            KeyConditionExpression=Key('origin_link').eq(origin_link) & Key('is_synced').eq(0)
+            KeyConditionExpression=Key('origin_link').eq(origin_link) & Key('is_synced').eq(1)
         )
         try:
             if len(response['Items']) == 0:
-                lucky_info = dict(spider.create_one_deep_request(origin_link))
+                info_update = dict()
+                if spider == AutoParser:
+                    info_update = dict(spider.create_one_deep_request(origin_link))
+                elif spider == AutoUncleParser:
+                    # info_update = dict()
+                elif spider == AutoScoutParser:
+                    # info_update = dict()
+                    for key, field in info_update.items():
+                        if field is None or field == "":
+                            info_update.pop(key)
+                info.update(info_update)
+                info['iteration_id'] = 2
+                info.pop('origin_link')
                 self.table.put_item(
                     Item={
                         'origin_link': origin_link,
                         'is_synced': 0,
-                        'info': lucky_info
+                        'info': info
                     }
                 )
         except ClientError as e:
-            spider.logger(e)
+            print(e)
         except Exception as e:
-            spider.logger(e)
+            print(e)
         return item
