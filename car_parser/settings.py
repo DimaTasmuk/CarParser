@@ -12,6 +12,9 @@
 MONGO_URI = 'mongodb://Dima:Dima@ds153577.mlab.com:53577/autostore'
 MONGO_DATABASE = 'autostore'
 
+DYNAMO_REGION = 'eu-central-1'
+DYNAMO_ENDPOINT = "http://localhost:8000"
+
 BOT_NAME = 'car_parser'
 
 SPIDER_MODULES = ['car_parser.spiders']
@@ -26,8 +29,8 @@ USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
 
-# LOG_LEVEL = "INFO"
-LOG_LEVEL = "DEBUG"
+LOG_LEVEL = "INFO"
+# LOG_LEVEL = "DEBUG"
 
 COOKIES_ENABLED = False
 
@@ -85,9 +88,9 @@ DOWNLOADER_MIDDLEWARES = {
 
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
-# ITEM_PIPELINES = {
-#    'car_parser.pipelines.MongoPipeline': 300,
-# }
+ITEM_PIPELINES = {
+   'car_parser.pipelines.DynamoPipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html

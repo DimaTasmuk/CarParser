@@ -7,8 +7,8 @@ from car_parser.loaders.AutoLoader import AutoLoader
 
 
 # Spider call structure: scrapy crawl <name> -o <output file> -a <arguments>
-# Spider call example: scrapy crawl auto_parser -o xml_files\auto_parser.xml -a deep=true
-# Spider call example: scrapy crawl auto_parser -o xml_files\auto_parser.xml -a deep=false
+# Spider call: scrapy crawl auto_parser -o xml_files\auto_parser.xml -a deep=true -a deep_links=http:,http:,http:
+# Spider call: scrapy crawl auto_parser -o xml_files\auto_parser.xml -a deep=false
 
 
 class AutoParser(scrapy.Spider):
@@ -34,6 +34,9 @@ class AutoParser(scrapy.Spider):
         # Set as argument
         if hasattr(self, 'deep') and self.deep.lower() == 'true':
             self.deep_parse_enabled = True
+            if hasattr(self, 'deep_links') and len(self.deep_links) > 0:
+                self.links_to_deep_parse = self.deep_links.split(',')
+                print('has links')
 
     def start_requests(self):
         if self.deep_parse_enabled:
@@ -82,18 +85,24 @@ class AutoParser(scrapy.Spider):
 
     # Start deep parse for all items
     def create_deep_parse_requests(self, response):
-        for item in response.css('ul.vehicleOffers.vehicleList li.offers.size1of1.contentDesc'):
-            yield self.parse_car_by_url(self.ORIGIN_LINK + item.css('a.vehicleOffersBox::attr(href)').extract_first())
+        if len(self.links_to_deep_parse) > 0:
+            for link in self.links_to_deep_parse:
+                yield Request(link, self.deep_parse)
+        else:
+            for item in response.css('ul.vehicleOffers.vehicleList li.offers.size1of1.contentDesc'):
+                yield Request(self.ORIGIN_LINK + item.css('a.vehicleOffersBox::attr(href)').extract_first(),
+                              self.deep_parse)
 
-        next_page = response.css("div.pagNext a.icon-right-dir::attr(href)").extract_first()
-        if next_page is not None:
-            yield response.follow(next_page, self.create_deep_parse_requests)
+            next_page = response.css("div.pagNext a.icon-right-dir::attr(href)").extract_first()
+            if next_page is not None:
+                yield response.follow(next_page, self.create_deep_parse_requests)
 
-    def parse_car_by_url(self, url):
-        return Request(url, self.deep_parse)
+    def create_request(self, link):
+        return Request(link, self.deep_parse)
 
     # Parse single car for deep_parse
     def deep_parse(self, response):
+        print('2')
         # Check that this item was parsed
         if response.url not in self.parsed_cars_links:
             loader = AutoLoader(item=AutoItem(), response=response)
