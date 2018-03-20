@@ -13,8 +13,6 @@ MONGO_URI = 'mongodb://Dima:Dima@ds153577.mlab.com:53577/autostore'
 MONGO_DATABASE = 'autostore'
 
 DYNAMO_REGION = 'eu-central-1'
-aws_access_key_id = "AKIAIBWBP7Y6WC6VV5EA"
-aws_secret_access_key = "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"
 
 BOT_NAME = 'car_parser'
 
