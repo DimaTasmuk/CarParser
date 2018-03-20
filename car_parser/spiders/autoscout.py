@@ -4,11 +4,15 @@ from urlparse import urljoin
 
 from math import ceil
 
+from scrapy.selector import HtmlXPathSelector, Selector
+
 from .literals.autoscout import *
 from car_parser.utilities.uri import *
 
 from re import search, findall
 from scrapy import Spider, Request
+
+import requests
 
 
 # Spider call structure: scrapy crawl <name> -o <output file> -a <arguments>
@@ -144,7 +148,7 @@ class AutoScoutParser(Spider):
     def parse(self, response):
         try:
             if not self.deep_parse_enabled:
-                for record in self.shallow_parse(response):
+                for record in self.updating_parse(response):
                     yield record
         except ValueError:
             self.logger.warning("Invalid data on %s" % response.url)
@@ -155,12 +159,32 @@ class AutoScoutParser(Spider):
                 yield self.create_deep_parse_request(response.url, url.extract())
 
     # Create parse request
-    def create_deep_parse_request(self, old_url, new_url):
+    def create_deep_parse_request(self, old_url, new_url, mode='deep'):
         new_url = urljoin(old_url, new_url)
         for parameter in ['brand', 'model']:
             value = get_parameter(old_url, PARAMETERS[parameter])
             new_url = set_parameter(new_url, PARAMETERS[parameter], value)
-        return Request(new_url, self.deep_parse)
+        if mode == 'update':
+            return self.deep_parse(requests.get(new_url), mode)
+        else:
+            return Request(new_url, self.deep_parse)
+
+    def updating_parse(self, response):
+        records = []
+
+        for car in response.xpath(COMMON_XPATH['car']):
+            record = dict()
+
+            record['origin_link'] = car.xpath(
+                SHALLOW_PARSE_FIELDS_XPATH['origin_link']
+            ).extract_first()
+            record['new_url'] = record['origin_link']
+
+            record['old_url'] = response.url
+
+            records.append(record)
+
+        return records
 
     # Parse records from page
     def shallow_parse(self, response):
@@ -182,10 +206,11 @@ class AutoScoutParser(Spider):
 
             records.append(self.shallow_normalization(record))
 
+
         return records
 
     # Parse page and initialize next request
-    def deep_parse(self, response):
+    def deep_parse(self, response, mode='deep'):
         # Record processing
         record = dict()
         record['origin_link'] = clear_parameters(response.url)
@@ -194,6 +219,9 @@ class AutoScoutParser(Spider):
         record['make'] = self.brands[brand_key]
         model_key = get_parameter(response.url, PARAMETERS['model'])
         record['model'] = self.models[brand_key][model_key]
+
+        if mode == 'update':
+            response = Selector(response)
 
         data = response.xpath('//main')
         for field, xpath in DEEP_PARSE_FIELDS_XPATH.items():

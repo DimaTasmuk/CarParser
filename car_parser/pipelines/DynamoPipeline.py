@@ -49,9 +49,13 @@ class DynamoPipeline(object):
                 if spider == AutoParser:
                     info_update = dict(spider.create_one_deep_request(origin_link))
                 elif spider == AutoUncleParser:
-                    # info_update = dict()
-                elif spider == AutoScoutParser:
-                    # info_update = dict()
+                    info_update = dict()
+                elif spider.name == "autoscout24":
+                    info_update = dict(spider.create_deep_parse_request(
+                        item['old_url'],
+                        item['new_url'],
+                        'update'
+                    ))
                     for key, field in info_update.items():
                         if field is None or field == "":
                             info_update.pop(key)
