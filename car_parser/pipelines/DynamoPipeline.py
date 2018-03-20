@@ -7,7 +7,7 @@ from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 from dateutil import tz
 
-from car_parser.settings import DYNAMO_ENDPOINT, DYNAMO_REGION
+from car_parser.settings import DYNAMO_REGION
 
 if os.name == 'nt':
     def _naive_is_dst(self, dt):
@@ -27,7 +27,7 @@ class DynamoPipeline(object):
     bucket = set()
 
     def __init__(self):
-        self.dynamodb = boto3.resource('dynamodb', region_name=DYNAMO_REGION)#, endpoint_url=DYNAMO_ENDPOINT)
+        self.dynamodb = boto3.resource('dynamodb', region_name=DYNAMO_REGION)
         self.table = None
 
     def open_spider(self, spider):
@@ -43,23 +43,20 @@ class DynamoPipeline(object):
         info['iteration_id'] = 2
         response = self.table.query(
             ProjectionExpression="origin_link, is_synced",
-            KeyConditionExpression=Key('origin_link').eq(origin_link) & Key('is_synced').eq(1)
+            KeyConditionExpression=Key('origin_link').eq(origin_link) & Key('is_synced').eq(0)
         )
         try:
-            if origin_link not in self.bucket and len(response['Items']) == 0:
-                self.bucket.add(origin_link)
-                spider.create_request(origin_link)
-            elif origin_link in self.bucket:
+            if len(response['Items']) == 0:
+                lucky_info = dict(spider.create_one_deep_request(origin_link))
                 self.table.put_item(
                     Item={
                         'origin_link': origin_link,
                         'is_synced': 0,
-                        'info': info
+                        'info': lucky_info
                     }
                 )
-                self.bucket.remove(origin_link)
         except ClientError as e:
-            print(e)
+            spider.logger(e)
         except Exception as e:
-            print(e)
+            spider.logger(e)
         return item

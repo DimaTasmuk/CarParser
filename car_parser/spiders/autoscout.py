@@ -160,10 +160,7 @@ class AutoScoutParser(Spider):
         for parameter in ['brand', 'model']:
             value = get_parameter(old_url, PARAMETERS[parameter])
             new_url = set_parameter(new_url, PARAMETERS[parameter], value)
-        return self.parse_car_by_url(new_url)
-
-    def parse_car_by_url(self, url):
-        return Request(url, self.deep_parse)
+        return Request(new_url, self.deep_parse)
 
     # Parse records from page
     def shallow_parse(self, response):

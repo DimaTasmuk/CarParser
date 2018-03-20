@@ -1,6 +1,7 @@
 # coding=utf-8
 import scrapy
 from scrapy import Request
+import requests
 
 from car_parser.items.AutoItem import AutoItem
 from car_parser.loaders.AutoLoader import AutoLoader
@@ -34,9 +35,6 @@ class AutoParser(scrapy.Spider):
         # Set as argument
         if hasattr(self, 'deep') and self.deep.lower() == 'true':
             self.deep_parse_enabled = True
-            if hasattr(self, 'deep_links') and len(self.deep_links) > 0:
-                self.links_to_deep_parse = self.deep_links.split(',')
-                print('has links')
 
     def start_requests(self):
         if self.deep_parse_enabled:
@@ -59,24 +57,24 @@ class AutoParser(scrapy.Spider):
             if origin_link not in self.parsed_cars_links:
                 loader = AutoLoader(item=AutoItem(), selector=car)
                 loader.add_value('origin_link', unicode(origin_link))
-                loader.add_css('id', "li::attr(data-id)")
-                loader.add_css('marketing_headline', "*.headline.ellipsisText::text")
-                loader.add_css('sales_price_incl_vat', "span.priceBig::text", re='\S+')
-                loader.add_css('sales_price_excl_vat', "div.priceBox::text", re='\S+')
-                loader.add_css('currency', "span.priceBig::text")
+                # loader.add_css('id', "li::attr(data-id)")
+                # loader.add_css('marketing_headline', "*.headline.ellipsisText::text")
+                # loader.add_css('sales_price_incl_vat', "span.priceBig::text", re='\S+')
+                # loader.add_css('sales_price_excl_vat', "div.priceBox::text", re='\S+')
+                # loader.add_css('currency', "span.priceBig::text")
+                #
+                # vehicle_data_loader = loader.nested_css("div.technicalData")
+                # vehicle_data_loader.add_css('mileage', "span[data-content*=mileage]::text", re="(?P<extract>.*) km")
+                # vehicle_data_loader.add_css('power_in_kw', "span[data-content*=power]::text", re="(?P<extract>\d+) kW")
+                # vehicle_data_loader.add_css('power_in_ps', "span[data-content*=power]::text", re="(?P<extract>\d+) PS")
+                # vehicle_data_loader.add_css('fuel', "span[data-content*=fuelType]::text")
+                # vehicle_data_loader.add_css('fuel_consumption_comb', "div::text", re='(?P<extract>\S+) l/100km')
+                # vehicle_data_loader.add_css('co2_emission', "div::text", re='(?P<extract>\d+)g CO2/km')
+                # vehicle_data_loader.add_css('gearbox', "span[data-content*=gearbox]::text")
+                # vehicle_data_loader.add_css('first_registration', "span[data-content*=registrationDate]::text",
+                #                             re="EZ (?P<extract>.*)")
 
-                vehicle_data_loader = loader.nested_css("div.technicalData")
-                vehicle_data_loader.add_css('mileage', "span[data-content*=mileage]::text", re="(?P<extract>.*) km")
-                vehicle_data_loader.add_css('power_in_kw', "span[data-content*=power]::text", re="(?P<extract>\d+) kW")
-                vehicle_data_loader.add_css('power_in_ps', "span[data-content*=power]::text", re="(?P<extract>\d+) PS")
-                vehicle_data_loader.add_css('fuel', "span[data-content*=fuelType]::text")
-                vehicle_data_loader.add_css('fuel_consumption_comb', "div::text", re='(?P<extract>\S+) l/100km')
-                vehicle_data_loader.add_css('co2_emission', "div::text", re='(?P<extract>\d+)g CO2/km')
-                vehicle_data_loader.add_css('gearbox', "span[data-content*=gearbox]::text")
-                vehicle_data_loader.add_css('first_registration', "span[data-content*=registrationDate]::text",
-                                            re="EZ (?P<extract>.*)")
-
-                self.parsed_cars_links.add(origin_link)
+                # self.parsed_cars_links.add(origin_link)
                 yield loader.load_item()
 
         next_page = response.css("div.pagNext a.icon-right-dir::attr(href)").extract_first()
@@ -85,24 +83,18 @@ class AutoParser(scrapy.Spider):
 
     # Start deep parse for all items
     def create_deep_parse_requests(self, response):
-        if len(self.links_to_deep_parse) > 0:
-            for link in self.links_to_deep_parse:
-                yield Request(link, self.deep_parse)
-        else:
-            for item in response.css('ul.vehicleOffers.vehicleList li.offers.size1of1.contentDesc'):
-                yield Request(self.ORIGIN_LINK + item.css('a.vehicleOffersBox::attr(href)').extract_first(),
-                              self.deep_parse)
+        for item in response.css('ul.vehicleOffers.vehicleList li.offers.size1of1.contentDesc'):
+            yield self.create_one_deep_request(self.ORIGIN_LINK + item.css('a.vehicleOffersBox::attr(href)').extract_first())
 
-            next_page = response.css("div.pagNext a.icon-right-dir::attr(href)").extract_first()
-            if next_page is not None:
-                yield response.follow(next_page, self.create_deep_parse_requests)
+        next_page = response.css("div.pagNext a.icon-right-dir::attr(href)").extract_first()
+        if next_page is not None:
+            yield response.follow(next_page, self.create_deep_parse_requests)
 
-    def create_request(self, link):
-        return Request(link, self.deep_parse)
+    def create_one_deep_request(self, link):
+        return self.deep_parse_one_car(requests.get(link))
 
     # Parse single car for deep_parse
-    def deep_parse(self, response):
-        print('2')
+    def deep_parse_one_car(self, response):
         # Check that this item was parsed
         if response.url not in self.parsed_cars_links:
             loader = AutoLoader(item=AutoItem(), response=response)
