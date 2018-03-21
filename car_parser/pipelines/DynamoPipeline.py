@@ -7,7 +7,7 @@ from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 from dateutil import tz
 
-from car_parser.settings import DYNAMO_REGION, aws_access_key_id, aws_secret_access_key
+from car_parser.credentials import DYNAMO_REGION, aws_access_key_id, aws_secret_access_key
 from car_parser.spiders import AutoParser
 from car_parser.spiders.autoscout import AutoScoutParser
 from car_parser.spiders.autouncle import AutoUncleParser

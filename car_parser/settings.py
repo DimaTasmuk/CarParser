@@ -9,11 +9,6 @@
 #     http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 #     http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
 
-MONGO_URI = 'mongodb://Dima:Dima@ds153577.mlab.com:53577/autostore'
-MONGO_DATABASE = 'autostore'
-
-DYNAMO_REGION = 'eu-central-1'
-
 BOT_NAME = 'car_parser'
 
 SPIDER_MODULES = ['car_parser.spiders']
@@ -88,7 +83,7 @@ DOWNLOADER_MIDDLEWARES = {
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   'car_parser.pipelines.DynamoPipeline': 300,
+   'car_parser.pipelines.MongoPipeline': 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)

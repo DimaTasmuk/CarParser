@@ -1,10 +1,10 @@
 # coding=utf-8
-import decimal
+
 from urlparse import urljoin
 
 from math import ceil
 
-from scrapy.selector import HtmlXPathSelector, Selector
+from scrapy.selector import Selector
 
 from .literals.autoscout import *
 from car_parser.utilities.uri import *
@@ -282,13 +282,13 @@ class AutoScoutParser(Spider):
             if record[field] is not None:
                 record[field] = self.extract_nth_integer(record[field], index)
 
-        # Convert to decimal
-        decimal_values = {
+        # Convert to float
+        float_values = {
             'fuel_consumption_comb': 0
         }
-        for field, index in decimal_values.items():
+        for field, index in float_values.items():
             if record[field] is not None:
-                record[field] = self.extract_nth_decimal(record[field], index)
+                record[field] = self.extract_nth_float(record[field], index)
 
         # Currency
         record['currency'] = search('\S', record['currency']).group(0)
@@ -327,15 +327,15 @@ class AutoScoutParser(Spider):
             if record[field] is not None:
                 record[field] = self.extract_nth_integer(record[field], 0)
 
-        # Convert to decimal
-        decimal_values = [
+        # Convert to float
+        float_values = [
             'fuel_consumption_comb',
             'fuel_consumption_city',
             'fuel_consumption_country'
         ]
-        for field in decimal_values:
+        for field in float_values:
             if record[field] is not None:
-                record[field] = self.extract_nth_decimal(record[field], 0)
+                record[field] = self.extract_nth_float(record[field], 0)
 
         # Currency
         record['currency'] = search('\S', record['currency']).group(0)
@@ -382,13 +382,13 @@ class AutoScoutParser(Spider):
 
     # Get the first number from input string
     @staticmethod
-    def extract_nth_decimal(value, index):
+    def extract_nth_float(value, index):
         value = findall('[\d.,]+', value)
         if len(value) == 0:
             return None
         value = value[index]
         value = value.replace(',', '.')
-        return decimal.Decimal(value)
+        return float(value)
 
     # Get the first date from input string
     @staticmethod
