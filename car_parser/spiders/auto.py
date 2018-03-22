@@ -103,9 +103,9 @@ class AutoParser(scrapy.Spider):
             loader.add_xpath('make', "//dt[@data-content='brand']/following-sibling::dd[1]/text()")
             loader.add_xpath('model', "//dt[@data-content='model']/following-sibling::dd[1]/text()")
             loader.add_xpath('marketing_headline', "//dt[@data-content='modelVariant']/following-sibling::dd[1]/text()")
-            loader.add_css('sales_price_incl_vat', "span.priceBig::text", re="\S+")
-            loader.add_css('sales_price_excl_vat', "td.priceInfo::text", re="\S+")
-            loader.add_css('currency', "span.priceBig::text")
+            loader.add_css('sales_price_incl_vat', "span.priceBig::text", re="(\d+(?:\.)?(?:\d+)?)+")
+            loader.add_css('sales_price_excl_vat', "td.priceInfo::text", re="(\d+(?:\.)?(?:\d+)?)+")
+            loader.add_value('currency', u"\u20AC")
             loader.add_xpath('body_type', "//dt[@data-content='bodyType']/following-sibling::dd[1]/text()")
             loader.add_xpath('mileage', "//td[@data-content='mileage']/text()", re="\S+")
             loader.add_xpath('cubic_capacity', "//dt[@data-content='cubicCapacity']/following-sibling::dd[1]/text()",

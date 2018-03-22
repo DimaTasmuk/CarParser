@@ -27,7 +27,6 @@ class AutoLoader(ItemLoader):
 
     sales_price_incl_vat_out = Compose(replace_dot)
     sales_price_excl_vat_out = Compose(replace_dot)
-    currency_out = Compose(lambda c: c[0][-1])
     mileage_out = Compose(replace_dot)
     cubic_capacity_in = TakeFirst()
     cubic_capacity_out = Compose(replace_dot)
