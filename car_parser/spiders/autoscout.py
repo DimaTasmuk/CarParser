@@ -211,13 +211,14 @@ class AutoScoutParser(Spider):
 
     # Parse page and initialize next request
     def deep_parse(self, response, mode='deep'):
+        origin_link = response.url
         # Record processing
         record = dict()
-        record['origin_link'] = clear_parameters(response.url)
+        record['origin_link'] = clear_parameters(origin_link)
 
-        brand_key = get_parameter(response.url, PARAMETERS['brand'])
+        brand_key = get_parameter(origin_link, PARAMETERS['brand'])
         record['make'] = self.brands[brand_key]
-        model_key = get_parameter(response.url, PARAMETERS['model'])
+        model_key = get_parameter(origin_link, PARAMETERS['model'])
         record['model'] = self.models[brand_key][model_key]
 
         if mode == 'update':
@@ -250,8 +251,8 @@ class AutoScoutParser(Spider):
             record['airbags'] = None
 
         if not self.is_valid(record):
-            self.logger.info("Invalid response from %s" % response.url)
-            return Request(response.url, self.parse)
+            self.logger.info("Invalid response from %s" % origin_link)
+            return Request(origin_link, self.parse)
 
         return self.deep_normalization(record)
 
