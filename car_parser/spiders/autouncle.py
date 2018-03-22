@@ -260,13 +260,17 @@ class AutoUncleParser(scrapy.Spider):
         loader.add_value('emission_class', car.css('ul li.euro_emission_class dfn::text').extract_first())
         loader.add_value('emission_class', car.css('ul li.euro_emission_class span::text').extract_first())
 
-        try:
-            headline = car.css('h3.car-title span span::text').extract_first()
-            headline = headline.replace(loader.get_value('make'), '', 1)
-            headline = headline.replace(loader.get_value('model'), '', 1)
-            loader.add_value('marketing_headline', headline)
-        except AttributeError:
-            print(loader.get_value('origin_link'))
+        headline = car.css('h3.car-title span span::text').extract_first()
+        if headline is None:
+            try:
+                headline = car.css('h3.car-title span::text').extract_first()
+            except AttributeError:
+                return
+        if headline is None:
+                return
+        headline = headline.replace(loader.get_value('make'), '', 1)
+        headline = headline.replace(loader.get_value('model'), '', 1)
+        loader.add_value('marketing_headline', headline)
 
     def get_price_arguments(self, url):
         try:
@@ -291,6 +295,8 @@ class AutoUncleParser(scrapy.Spider):
     @staticmethod
     def get_cubic_capacity(response):
         engine_info = response.css("ul li.engine span::text").extract_first()
+        if engine_info is None:
+            return None
         value = re.search(r'\d+\.?\d*', engine_info)
         if value is None:
             return None
@@ -300,6 +306,8 @@ class AutoUncleParser(scrapy.Spider):
     @staticmethod
     def get_fuel_type(response):
         engine_info = response.css("ul li.engine span::text").extract_first()
+        if engine_info is None:
+            return None
         value = re.search(r'[a-zA-Z]+', engine_info)
         if value is None:
             return None
