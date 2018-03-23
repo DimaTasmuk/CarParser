@@ -15,7 +15,7 @@ class MongoPipeline(object):
     bucket_for_insert = []
     bucket_for_update = []
 
-    MAX_BUCKET_SIZE = 2000
+    MAX_BUCKET_SIZE = 200
 
     def __init__(self):
         # Set mongo connection string
@@ -89,7 +89,7 @@ class MongoPipeline(object):
                 except DuplicateKeyError:
                     self.bucket_for_insert = []
 
-            return item
+            return info
         else:
             # update current iteration id for car
             self.bucket_for_update.append(item['origin_link'])
@@ -120,7 +120,7 @@ class MongoPipeline(object):
 
     def close_spider(self, spider):
         if len(self.bucket_for_insert) > 0:
-            self.mongodb[spider.collection_name].insert(self.bucket_for_insert)
+            self.mongodb[spider.table_name].insert(self.bucket_for_insert)
             self.bucket_for_insert = []
 
         if len(self.bucket_for_update) >= 0:
@@ -136,4 +136,15 @@ class MongoPipeline(object):
                 }
             )
             self.bucket_for_update = []
+        self.iteration_collection.update(
+                        {
+                            'site_name': spider.table_name
+                        },
+                        {
+                            '$set':
+                            {
+                                'iteration_id': self.iteration_id
+                            }
+                        }
+                    )
         self.client.close()
