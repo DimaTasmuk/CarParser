@@ -155,11 +155,11 @@ class AutoUncleParser(scrapy.Spider):
                                                        PARAMETERS['model'])
                 )
                 if self.deep_parse_enabled:
-                    self.create_one_deep_request(response.urljoin(origin_link), model)
-                    # request = scrapy.Request(response.urljoin(origin_link),
-                    #                          self.parse_car_details)
-                    # request.cookies['meta_model'] = model
-                    # yield request
+                    # self.create_one_deep_request(response.urljoin(origin_link), model)
+                    request = scrapy.Request(response.urljoin(origin_link),
+                                             self.parse_car_details)
+                    request.cookies['meta_model'] = model
+                    yield request
                 else:
                     loader = AutoUncleLoader(item=AutoUncleItem(), selector=car)
                     loader.add_value('model', unicode(model))
@@ -188,7 +188,7 @@ class AutoUncleParser(scrapy.Spider):
 
     def parse_car_details(self, response, model):
         origin_link = response.url
-        response = Selector(response)
+        # response = Selector(response)
         car = response.css("div.car-list-item div.car-details-wrapper")
 
         loader = AutoUncleLoader(item=AutoUncleItem(), selector=car)
