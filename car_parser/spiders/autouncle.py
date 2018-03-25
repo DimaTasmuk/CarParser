@@ -316,8 +316,11 @@ class AutoUncleParser(scrapy.Spider):
 
     @staticmethod
     def get_cars_number(response):
+        # try:
         count_line = response.css(
             "div.search-summary span h1::text").extract_first()
+        # except MemoryError, e:
+        #     print(e)
         try:
             return int(count_line.split(" ")[0].replace(".", ''))
         except AttributeError:

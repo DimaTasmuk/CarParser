@@ -112,7 +112,10 @@ class MongoPipeline(object):
                     self.bucket_for_update = []
                 except DuplicateKeyError:
                     self.bucket_for_update = []
-
+            return {
+                "origin_link": origin_link,
+                "information": "Already in database"
+            }
         # except ClientError as e:
         #     print('ERROR', e)
         # except Exception as e:
