@@ -158,7 +158,7 @@ class AutoUncleParser(scrapy.Spider):
                     # self.create_one_deep_request(response.urljoin(origin_link), model)
                     request = scrapy.Request(response.urljoin(origin_link),
                                              self.parse_car_details)
-                    request.cookies['meta_model'] = model
+                    request.meta['meta_model'] = model
                     yield request
                 else:
                     loader = AutoUncleLoader(item=AutoUncleItem(), selector=car)
@@ -186,8 +186,9 @@ class AutoUncleParser(scrapy.Spider):
     def create_one_deep_request(self, link, model):
         return self.parse_car_details(requests.get(link), model)
 
-    def parse_car_details(self, response, model):
+    def parse_car_details(self, response):
         origin_link = response.url
+        model = response.meta['meta_model']
         # response = Selector(response)
         car = response.css("div.car-list-item div.car-details-wrapper")
 
