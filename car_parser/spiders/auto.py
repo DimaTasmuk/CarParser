@@ -2,6 +2,8 @@
 import scrapy
 from scrapy import Request
 import requests
+from scrapy.http import Response
+from twisted.internet import defer
 
 from car_parser.items.AutoItem import AutoItem
 from car_parser.loaders.AutoLoader import AutoLoader
@@ -55,11 +57,11 @@ class AutoParser(scrapy.Spider):
         for car in cars:
             origin_link = self.ORIGIN_LINK + car.css("a.vehicleOffersBox::attr(href)").extract_first()
             if origin_link not in self.parsed_cars_links:
-                # loader = AutoLoader(item=AutoItem(), selector=car)
-                # loader.add_value('origin_link', unicode(origin_link))
+                loader = AutoLoader(item=AutoItem(), selector=car)
+                loader.add_value('origin_link', unicode(origin_link))
                 # loader.add_css('id', "li::attr(data-id)")
                 # loader.add_css('marketing_headline', "*.headline.ellipsisText::text")
-                # loader.add_css('sales_price_incl_vat', "span.priceBig::text", re='\S+')
+                loader.add_css('sales_price_incl_vat', "span.priceBig::text", re='\S+')
                 # loader.add_css('sales_price_excl_vat', "div.priceBox::text", re='\S+')
                 # loader.add_css('currency', "span.priceBig::text")
                 #
@@ -75,7 +77,7 @@ class AutoParser(scrapy.Spider):
                 #                             re="EZ (?P<extract>.*)")
 
                 # self.parsed_cars_links.add(origin_link)
-                yield {'origin_link': origin_link}
+                yield loader.load_item()
 
         next_page = response.css("div.pagNext a.icon-right-dir::attr(href)").extract_first()
         if next_page is not None:

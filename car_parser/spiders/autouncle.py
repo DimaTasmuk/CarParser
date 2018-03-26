@@ -164,6 +164,7 @@ class AutoUncleParser(scrapy.Spider):
                     loader = AutoUncleLoader(item=AutoUncleItem(), selector=car)
                     loader.add_value('model', unicode(model))
                     loader.add_value('origin_link', unicode(ORIGIN_LINK + origin_link))
+                    loader.add_css('sales_price_incl_vat', "div.pricing span.price::attr(content)")
 
                     # self.fill_search_page_fields(loader, car)
 
