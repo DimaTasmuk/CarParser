@@ -51,9 +51,14 @@ class MongoPipeline(object):
         response = self.collection.find_one(
             {
                 'origin_link': origin_link,
-                'is_synced': 0
             },
-            projection={'origin_link': True, 'is_synced': True}
+            projection=
+            {
+                '_id': False,
+                'origin_link': True,
+                'is_synced': True,
+                'sales_price_incl_vat': True
+            }
         )
 
         # TODO: add logger for error
@@ -92,30 +97,46 @@ class MongoPipeline(object):
             return info
         else:
             # update current iteration id for car
-            self.bucket_for_update.append(item['origin_link'])
-            if len(self.bucket_for_update) >= self.MAX_BUCKET_SIZE:
-                try:
-                    self.mongodb[spider.table_name].update(
-                        {
-                            'origin_link':
+            if response['sales_price_incl_vat'] != item['sales_price_incl_vat']:
+                self.mongodb[spider.table_name].update(
+                    {
+                        'origin_link': item['origin_link']
+                    },
+                    {
+                        '$set':
                             {
-                                '$in': self.bucket_for_update
+                                'iteration_id': self.iteration_id,
+                                'is_synced': 0,
+                                'sales_price_incl_vat': item['sales_price_incl_vat']
                             }
-                        },
-                        {
-                            '$set':
+                    }
+                )
+            else:
+                self.bucket_for_update.append(origin_link)
+                if len(self.bucket_for_update) >= self.MAX_BUCKET_SIZE:
+                    try:
+                        self.mongodb[spider.table_name].update_many(
                             {
-                                'iteration_id': self.iteration_id
-                            }
-                        }
-                    )
-                    self.bucket_for_update = []
-                except DuplicateKeyError:
-                    self.bucket_for_update = []
-            return {
-                "origin_link": origin_link,
-                "information": "Already in database"
-            }
+                                'origin_link':
+                                {
+                                    '$in': self.bucket_for_update
+                                }
+                            },
+                            {
+                                '$set':
+                                {
+                                    'iteration_id': self.iteration_id
+                                }
+                            },
+                            multi=True
+                        )
+                        self.bucket_for_update = []
+                    except DuplicateKeyError:
+                        self.bucket_for_update = []
+                return {
+                    "origin_link": origin_link,
+                    "information": "Already in database"
+                }
         # except ClientError as e:
         #     print('ERROR', e)
         # except Exception as e:
@@ -126,7 +147,7 @@ class MongoPipeline(object):
             self.mongodb[spider.table_name].insert(self.bucket_for_insert)
             self.bucket_for_insert = []
 
-        if len(self.bucket_for_update) >= 0:
+        if len(self.bucket_for_update) > 0:
             self.mongodb[spider.table_name].update(
                 {
                     'origin_link':
@@ -135,8 +156,12 @@ class MongoPipeline(object):
                         }
                 },
                 {
-                    'iteration_id': self.iteration_id
-                }
+                    '$set':
+                        {
+                            'iteration_id': self.iteration_id
+                        }
+                },
+                multi=True
             )
             self.bucket_for_update = []
         self.iteration_collection.update(

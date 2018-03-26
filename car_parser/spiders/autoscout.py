@@ -58,6 +58,10 @@ class AutoScoutParser(Spider):
             self.brands[brand_key] = brand_value
             self.models[brand_key] = dict()
 
+            # For debug. +-26 cars such model
+            # if brand_key != '16337':
+            #     continue
+
             # Skip the 'Others' section
             if OTHERS_ELEMENT_ID in brand_value:
                 continue
@@ -179,8 +183,11 @@ class AutoScoutParser(Spider):
                 SHALLOW_PARSE_FIELDS_XPATH['origin_link']
             ).extract_first()
             record['new_url'] = record['origin_link']
-
             record['old_url'] = response.url
+            record['sales_price_incl_vat'] = self.extract_nth_integer(
+                car.xpath(
+                    SHALLOW_PARSE_FIELDS_XPATH['sales_price_incl_vat']
+                ).extract_first(), 0)
 
             records.append(record)
 
