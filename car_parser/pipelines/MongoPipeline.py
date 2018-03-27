@@ -111,11 +111,15 @@ class MongoPipeline(object):
                             }
                     }
                 )
+                return {
+                    "origin_link": origin_link,
+                    "information": "Sales price updated"
+                }
             else:
                 self.bucket_for_update.append(origin_link)
                 if len(self.bucket_for_update) >= self.MAX_BUCKET_SIZE:
                     try:
-                        self.mongodb[spider.table_name].update_many(
+                        self.mongodb[spider.table_name].update(
                             {
                                 'origin_link':
                                 {
