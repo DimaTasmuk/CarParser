@@ -1,5 +1,3 @@
-import random
-
 import pymongo
 from pymongo.errors import DuplicateKeyError
 
@@ -15,7 +13,7 @@ class MongoPipeline(object):
     bucket_for_insert = []
     bucket_for_update = []
 
-    MAX_BUCKET_SIZE = 200
+    MAX_BUCKET_SIZE = 2000
 
     def __init__(self):
         # Set mongo connection string

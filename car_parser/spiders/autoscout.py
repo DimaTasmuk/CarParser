@@ -169,7 +169,9 @@ class AutoScoutParser(Spider):
             value = get_parameter(old_url, PARAMETERS[parameter])
             new_url = set_parameter(new_url, PARAMETERS[parameter], value)
         if mode == 'update':
-            return self.deep_parse(requests.get(new_url), mode)
+            r = requests.get(new_url)
+            r.encoding = 'utf-8'
+            return self.deep_parse(r, mode)
         else:
             return Request(new_url, self.deep_parse)
 

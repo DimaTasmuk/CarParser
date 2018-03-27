@@ -93,7 +93,9 @@ class AutoParser(scrapy.Spider):
             yield response.follow(next_page, self.create_deep_parse_requests)
 
     def create_one_deep_request(self, link):
-        return self.deep_parse_one_car(requests.get(link))
+        r = requests.get(link)
+        r.encoding = 'utf-8'
+        return self.deep_parse_one_car(r)
 
     # Parse single car for deep_parse
     def deep_parse_one_car(self, response):
@@ -107,7 +109,7 @@ class AutoParser(scrapy.Spider):
             loader.add_xpath('marketing_headline', "//dt[@data-content='modelVariant']/following-sibling::dd[1]/text()")
             loader.add_css('sales_price_incl_vat', "span.priceBig::text", re="(\d+(?:\.)?(?:\d+)?)+")
             loader.add_css('sales_price_excl_vat', "td.priceInfo::text", re="(\d+(?:\.)?(?:\d+)?)+")
-            loader.add_value('currency', u"\u20AC")
+            loader.add_css('currency', "span.priceBig::text")
             loader.add_xpath('body_type', "//dt[@data-content='bodyType']/following-sibling::dd[1]/text()")
             loader.add_xpath('mileage', "//td[@data-content='mileage']/text()", re="\S+")
             loader.add_xpath('cubic_capacity', "//dt[@data-content='cubicCapacity']/following-sibling::dd[1]/text()",

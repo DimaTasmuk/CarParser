@@ -185,7 +185,9 @@ class AutoUncleParser(scrapy.Spider):
             yield response.follow(url, self.parse_car)
 
     def create_one_deep_request(self, link, model):
-        return self.parse_car_details(requests.get(link), model)
+        r = requests.get(link)
+        r.encoding = 'utf-8'
+        return self.parse_car_details(r, model)
 
     def parse_car_details(self, response, model):
         origin_link = response.url
