@@ -17,3 +17,5 @@ out/
 # Environment
 venv/
 *.pyc
+
+credentials.py
