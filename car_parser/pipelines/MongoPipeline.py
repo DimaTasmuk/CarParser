@@ -52,7 +52,7 @@ class MongoPipeline(object):
                 self.bucket_of_items_to_process = []
             return item
         except Exception as e:
-            print(e.message)
+            print(item.get('origin_link'), e)
 
     def process_items_bucket(self, spider):
         bucket_of_origin_links = []
@@ -89,7 +89,7 @@ class MongoPipeline(object):
             except ValueError:
                 self.process_new_items(item, spider)
             except Exception as e:
-                print(e.message)
+                print(item.get('origin_link'), e)
 
     def process_new_items(self, item, spider):
         origin_link = item['origin_link']
