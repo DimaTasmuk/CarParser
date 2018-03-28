@@ -230,6 +230,9 @@ class AutoScoutParser(Spider):
         model_key = get_parameter(origin_link, PARAMETERS['model'])
         record['model'] = self.models[brand_key][model_key]
 
+        if response.status_code == 410:
+            return
+
         if mode == 'update':
             response = Selector(response)
 
