@@ -91,6 +91,7 @@ class MongoPipeline(object):
                 print(e.message)
 
     def process_new_items(self, item, spider):
+        item = dict(item)
         origin_link = item['origin_link']
         info = dict()
         info_update = dict()
