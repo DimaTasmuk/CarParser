@@ -44,6 +44,7 @@ class MongoPipeline(object):
 
     def process_item(self, item, spider):
         try:
+            item = dict(item)
             self.bucket_of_items_to_process.append(item)
 
             if len(self.bucket_of_items_to_process) >= self.MAX_BUCKET_SIZE:
@@ -91,7 +92,6 @@ class MongoPipeline(object):
                 print(e.message)
 
     def process_new_items(self, item, spider):
-        item = dict(item)
         origin_link = item['origin_link']
         info = dict()
         info_update = dict()
