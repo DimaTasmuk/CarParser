@@ -71,16 +71,17 @@ class MongoPipeline(object):
             self.bucket_of_items_to_process.append(item)
 
             if len(self.bucket_of_items_to_process) >= self.MAX_BUCKET_SIZE:
-                self.process_items_bucket(spider)
+                copy_of_bucket_of_items_to_process = copy.copy(self.bucket_of_items_to_process)
                 self.bucket_of_items_to_process = []
+                self.process_items_bucket(copy_of_bucket_of_items_to_process, spider)
             return item
         except Exception as e:
             self.log(e, inspect.stack()[0][3], item.get('origin_link'))
 
-    def process_items_bucket(self, spider):
+    def process_items_bucket(self, bucket_of_items_to_process, spider):
         try:
             bucket_of_origin_links = []
-            for item in self.bucket_of_items_to_process:
+            for item in bucket_of_items_to_process:
                 bucket_of_origin_links.append(item.get('origin_link'))
 
             # Check if such car is already inside collection
@@ -105,12 +106,11 @@ class MongoPipeline(object):
                 already_added_cars.append(car)
                 already_added_cars_origin_links.append(car['origin_link'])
 
-            copy_bucket_of_items_to_process = copy.copy(self.bucket_of_items_to_process)
-
-            for item in copy_bucket_of_items_to_process:
+            for item in bucket_of_items_to_process:
                 try:
                     index = already_added_cars_origin_links.index(item['origin_link'])
-                    item['is_price_changed'] = (item['sales_price_incl_vat'] != already_added_cars[index]['sales_price_incl_vat'])
+                    item['is_price_changed'] = \
+                        (item['sales_price_incl_vat'] != already_added_cars[index]['sales_price_incl_vat'])
                     try:
                         current_item = item
                         self.process_added_items(item, spider)
@@ -118,7 +118,7 @@ class MongoPipeline(object):
                         print(current_item.get('origin_link'), e)
                 except ValueError as e:
                     self.process_new_items(item, spider)
-                    print(item.get('origin_link'), e)
+                    # print(item.get('origin_link'), e)
                 except Exception as e:
                     print(item.get('origin_link'), e)
         except Exception as e:
@@ -152,8 +152,9 @@ class MongoPipeline(object):
             self.bucket_for_insert.append(info)
             if len(self.bucket_for_insert) >= self.MAX_BUCKET_SIZE:
                 try:
-                    self.mongodb[spider.table_name].insert(self.bucket_for_insert)
+                    copy_of_bucket_for_insert = copy.copy(self.bucket_for_insert)
                     self.bucket_for_insert = []
+                    self.mongodb[spider.table_name].insert(copy_of_bucket_for_insert)
                 except DuplicateKeyError:
                     self.bucket_for_insert = []
 
@@ -188,11 +189,13 @@ class MongoPipeline(object):
                 self.bucket_for_update.append(origin_link)
                 if len(self.bucket_for_update) >= self.MAX_BUCKET_SIZE:
                     try:
+                        copy_of_bucket_for_insert = copy.copy(self.bucket_for_insert)
+                        self.bucket_for_update = []
                         self.mongodb[spider.table_name].update(
                             {
                                 'origin_link':
                                 {
-                                    '$in': self.bucket_for_update
+                                    '$in': copy_of_bucket_for_insert
                                 }
                             },
                             {
@@ -203,7 +206,6 @@ class MongoPipeline(object):
                             },
                             multi=True
                         )
-                        self.bucket_for_update = []
                     except DuplicateKeyError:
                         self.bucket_for_update = []
                 return {
@@ -220,19 +222,23 @@ class MongoPipeline(object):
     def close_spider(self, spider):
         try:
             if len(self.bucket_of_items_to_process) > 0:
-                self.process_items_bucket(spider)
+                copy_of_bucket_of_items_to_process = copy.copy(self.bucket_of_items_to_process)
                 self.bucket_of_items_to_process = []
+                self.process_items_bucket(copy_of_bucket_of_items_to_process, spider)
 
             if len(self.bucket_for_insert) > 0:
-                self.mongodb[spider.table_name].insert(self.bucket_for_insert)
+                copy_of_bucket_for_insert = copy.copy(self.bucket_for_insert)
                 self.bucket_for_insert = []
+                self.mongodb[spider.table_name].insert(copy_of_bucket_for_insert)
 
             if len(self.bucket_for_update) > 0:
+                copy_of_bucket_for_update = copy.copy(self.bucket_for_update)
+                self.bucket_for_update = []
                 self.mongodb[spider.table_name].update(
                     {
                         'origin_link':
                             {
-                                '$in': self.bucket_for_update
+                                '$in': copy_of_bucket_for_update
                             }
                     },
                     {
@@ -243,7 +249,6 @@ class MongoPipeline(object):
                     },
                     multi=True
                 )
-                self.bucket_for_update = []
             self.iteration_collection.update(
                             {
                                 'site_name': spider.table_name
