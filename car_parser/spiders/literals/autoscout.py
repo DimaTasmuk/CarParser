@@ -84,10 +84,8 @@ DEEP_PARSE_FIELDS_XPATH = {
         "/text()",
 
     'body_type':
-        "./div[@class='cldt-headline']"
-        "/div"
-        "/div"
-        "/h4"
+        ".//dt[text()='Karosserieform']"
+        "/following-sibling::dd[1]"
         "/text()",
 
     'mileage':
