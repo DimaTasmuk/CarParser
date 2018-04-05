@@ -215,7 +215,6 @@ class AutoScoutParser(Spider):
 
             records.append(self.shallow_normalization(record))
 
-
         return records
 
     # Parse page and initialize next request
