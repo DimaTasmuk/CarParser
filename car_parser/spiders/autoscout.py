@@ -181,9 +181,12 @@ class AutoScoutParser(Spider):
         for car in response.xpath(COMMON_XPATH['car']):
             record = dict()
 
-            record['origin_link'] = ORIGIN_LINK + car.xpath(
-                SHALLOW_PARSE_FIELDS_XPATH['origin_link']
-            ).extract_first()
+            try:
+                record['origin_link'] = ORIGIN_LINK + car.xpath(
+                    SHALLOW_PARSE_FIELDS_XPATH['origin_link']
+                ).extract_first()
+            except TypeError:
+                return Request(response.url, self.updating_parse)
             record['new_url'] = record['origin_link']
             record['old_url'] = response.url
             record['sales_price_incl_vat'] = self.extract_nth_integer(

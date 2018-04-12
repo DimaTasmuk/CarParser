@@ -3,6 +3,7 @@ import inspect
 
 import pymongo
 from pymongo.errors import DuplicateKeyError
+from scrapy import Request
 
 from car_parser.credentials import MONGO_URI, MONGO_DATABASE
 from car_parser.spiders import AutoParser
@@ -60,9 +61,9 @@ class MongoPipeline(object):
             ).get('iteration_id', 0)
 
             # Check iteration id
-            print(self.iteration_id)
+            print("Previous iteration_id", self.iteration_id)
             self.iteration_id += 1
-            print(self.iteration_id)
+            print("Current iteration_id", self.iteration_id)
         except Exception as e:
             self.log(e, inspect.stack()[0][3])
 
@@ -117,6 +118,8 @@ class MongoPipeline(object):
                 try:
                     # Check if car price was changed at the site
                     index = already_added_cars_origin_links.index(item['origin_link'])
+                    if item.get('sales_price_incl_vat') is None:
+                        continue
                     item['is_price_changed'] = \
                         (item['sales_price_incl_vat'] != already_added_cars[index]['sales_price_incl_vat'])
 
@@ -151,21 +154,37 @@ class MongoPipeline(object):
             elif isinstance(spider, AutoUncleParser):
                 info_update = dict(spider.create_one_deep_request(origin_link, item['model']))
             elif isinstance(spider, AutoScoutParser):
-                info_update = dict(spider.create_deep_parse_request(
+                deep_parsed_item = spider.create_deep_parse_request(
                     item['old_url'],
                     item['new_url'],
                     'update'
-                ))
-                for key, field in info_update.items():
-                    if field is None or field == "":
-                        info_update.pop(key)
+                )
+                if deep_parsed_item is None:
+                    return {
+                        "origin_link": origin_link,
+                        "information": "Car was sold"
+                    }
+                elif isinstance(deep_parsed_item, Request):
+                    return {
+                        "origin_link": origin_link,
+                        "information": "Car will parse again"
+                    }
+                else:
+                    info_update = dict(deep_parsed_item)
+                    for key, field in info_update.items():
+                        if field is None or field == "":
+                            info_update.pop(key)
 
             # Add car description
             info.update(info_update)
             info['iteration_id'] = self.iteration_id
             info['is_synced'] = 0
-
             # Save item for future insert
+            if item.get('sales_price_incl_vat') is None:
+                return {
+                    "origin_link": origin_link,
+                    "information": "Car hasn't price"
+                }
             self.bucket_for_insert.append(info)
 
             if len(self.bucket_for_insert) >= self.MAX_BUCKET_SIZE:
@@ -213,7 +232,7 @@ class MongoPipeline(object):
                 if len(self.bucket_for_update) >= self.MAX_BUCKET_SIZE:
                     try:
                         # Create copy of the global variable for future process
-                        copy_of_bucket_for_insert = copy.copy(self.bucket_for_insert)
+                        copy_of_bucket_for_update = copy.copy(self.bucket_for_update)
                         self.bucket_for_update = []
 
                         # Update only iteration id
@@ -221,7 +240,7 @@ class MongoPipeline(object):
                             {
                                 'origin_link':
                                 {
-                                    '$in': copy_of_bucket_for_insert
+                                    '$in': copy_of_bucket_for_update
                                 }
                             },
                             {
