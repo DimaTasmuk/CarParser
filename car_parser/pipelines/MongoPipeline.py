@@ -319,7 +319,7 @@ class MongoPipeline(object):
                                 '$set':
                                 {
                                     'iteration_id': self.iteration_id,
-                                    'bad_field': self.mandatory
+                                    'bad_fields': self.mandatory
                                 }
                             }
                         )
