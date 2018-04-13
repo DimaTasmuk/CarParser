@@ -13,6 +13,11 @@ from car_parser.spiders.autouncle import AutoUncleParser
 
 class MongoPipeline(object):
 
+    mandatory = ['make', 'model', 'sales_price_incl_vat', 'currency', 'body_type',
+                 'mileage', 'fuel_consumption_comb', 'first_registration', 'colour']
+
+    good_mandatory_fields = dict()
+
     iteration_id = 0
     bucket_for_insert = []
     bucket_for_update = []
@@ -191,6 +196,10 @@ class MongoPipeline(object):
                 try:
                     # Create copy of the global variable for future process
                     copy_of_bucket_for_insert = copy.copy(self.bucket_for_insert)
+
+                    # Find mandatory fields that is empty
+                    self.find_bad_fields(copy_of_bucket_for_insert)
+
                     self.bucket_for_insert = []
 
                     # Insert data
@@ -276,6 +285,10 @@ class MongoPipeline(object):
             if len(self.bucket_for_insert) > 0:
                 # Create copy of the global variable for future process
                 copy_of_bucket_for_insert = copy.copy(self.bucket_for_insert)
+
+                # Find mandatory fields that is empty
+                self.find_bad_fields(copy_of_bucket_for_insert)
+
                 self.bucket_for_insert = []
                 self.mongodb[spider.table_name].insert(copy_of_bucket_for_insert)
 
@@ -305,7 +318,8 @@ class MongoPipeline(object):
                             {
                                 '$set':
                                 {
-                                    'iteration_id': self.iteration_id
+                                    'iteration_id': self.iteration_id,
+                                    'bad_field': self.mandatory
                                 }
                             }
                         )
@@ -313,3 +327,11 @@ class MongoPipeline(object):
             self.log(e, inspect.stack()[0][3])
         finally:
             self.client.close()
+
+    def find_bad_fields(self, copy_of_bucket_for_insert):
+        for b_item in copy_of_bucket_for_insert:
+            copy_of_mandatory = copy.copy(self.mandatory)
+            for m_field in copy_of_mandatory:
+                if b_item.get(m_field) is not None:
+                    self.good_mandatory_fields[m_field] = True
+                    self.mandatory.remove(m_field)
