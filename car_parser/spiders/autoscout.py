@@ -186,7 +186,7 @@ class AutoScoutParser(Spider):
                     SHALLOW_PARSE_FIELDS_XPATH['origin_link']
                 ).extract_first()
             except TypeError:
-                return Request(response.url, self.updating_parse)
+                continue
             record['new_url'] = record['origin_link']
             record['old_url'] = response.url
             record['sales_price_incl_vat'] = self.extract_nth_integer(
