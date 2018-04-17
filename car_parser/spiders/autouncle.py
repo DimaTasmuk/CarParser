@@ -65,12 +65,6 @@ class AutoUncleParser(scrapy.Spider):
                                 .split(",")[1::2]
             ]
 
-            # if brand == "Mitsubishi"
-            # or brand == "Hyundai"
-            # or brand == "Dacia":
-
-            # if brand == 'Audi':
-
             for model in (self.models[brand]):
                 for body_type in self.body_types:
                     for color in self.colors:
@@ -156,17 +150,11 @@ class AutoUncleParser(scrapy.Spider):
                 )
                 if self.deep_parse_enabled:
                     self.create_one_deep_request(response.urljoin(origin_link), model)
-                    # request = scrapy.Request(response.urljoin(origin_link),
-                    #                          self.parse_car_details)
-                    # request.cookies['meta_model'] = model
-                    # yield request
                 else:
                     loader = AutoUncleLoader(item=AutoUncleItem(), selector=car)
                     loader.add_value('model', unicode(model))
                     loader.add_value('origin_link', unicode(ORIGIN_LINK + origin_link))
                     loader.add_css('sales_price_incl_vat', "div.pricing span.price::attr(content)")
-
-                    # self.fill_search_page_fields(loader, car)
 
                     yield loader.load_item()
                 self.adverts.add(origin_link)
@@ -319,11 +307,8 @@ class AutoUncleParser(scrapy.Spider):
 
     @staticmethod
     def get_cars_number(response):
-        # try:
         count_line = response.css(
             "div.search-summary span h1::text").extract_first()
-        # except MemoryError, e:
-        #     print(e)
         try:
             return int(count_line.split(" ")[0].replace(".", ''))
         except AttributeError:

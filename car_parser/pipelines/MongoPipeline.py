@@ -266,10 +266,6 @@ class MongoPipeline(object):
                     "origin_link": origin_link,
                     "information": "Already in database"
                 }
-            # except ClientError as e:
-            #     print('ERROR', e)
-            # except Exception as e:
-            #     print('ERROR', e)
         except Exception as e:
             self.log(e, inspect.stack()[0][3], item.get('origin_link'))
 

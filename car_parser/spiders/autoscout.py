@@ -58,10 +58,6 @@ class AutoScoutParser(Spider):
             self.brands[brand_key] = brand_value
             self.models[brand_key] = dict()
 
-            # For debug. +-26 cars such model
-            # if brand_key != '16337':
-            #     continue
-
             # Skip the 'Others' section
             if OTHERS_ELEMENT_ID in brand_value:
                 continue

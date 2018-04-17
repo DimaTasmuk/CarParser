@@ -2,15 +2,13 @@
 import scrapy
 from scrapy import Request
 import requests
-from scrapy.http import Response
-from twisted.internet import defer
 
 from car_parser.items.AutoItem import AutoItem
 from car_parser.loaders.AutoLoader import AutoLoader
 
 
 # Spider call structure: scrapy crawl <name> -o <output file> -a <arguments>
-# Spider call: scrapy crawl auto_parser -o xml_files\auto_parser.xml -a deep=true -a deep_links=http:,http:,http:
+# Spider call: scrapy crawl auto_parser -o xml_files\auto_parser.xml -a deep=true
 # Spider call: scrapy crawl auto_parser -o xml_files\auto_parser.xml -a deep=false
 
 
