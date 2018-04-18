@@ -133,16 +133,15 @@ class MongoPipeline(object):
                         current_item = item
                         self.process_added_items(item, spider)
                     except Exception as e:
-                        print(current_item.get('origin_link'), e)
+                        self.log(e, inspect.stack()[0][3], current_item.get('origin_link'))
 
                 # Catching when item hasn't previous price(wasn't added)
                 except ValueError as e:
                     # Process item as new
                     self.process_new_items(item, spider)
-                    # print(item.get('origin_link'), e)
 
                 except Exception as e:
-                    print(item.get('origin_link'), e)
+                    self.log(e, inspect.stack()[0][3], item.get('origin_link'))
 
         except Exception as e:
             self.log(e, inspect.stack()[0][3], item.get('origin_link'))
@@ -155,7 +154,13 @@ class MongoPipeline(object):
 
             # Send item to the deep processing for each spider separately
             if isinstance(spider, AutoParser):
-                info_update = dict(spider.create_one_deep_request(origin_link))
+                deep_parsed_item = spider.create_deep_parse_request(origin_link)
+                if deep_parsed_item is None:
+                    return {
+                        "origin_link": origin_link,
+                        "information": "Already in database"
+                    }
+                info_update = dict(deep_parsed_item)
             elif isinstance(spider, AutoUncleParser):
                 info_update = dict(spider.create_one_deep_request(origin_link, item['model']))
             elif isinstance(spider, AutoScoutParser):
