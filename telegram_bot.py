@@ -1,4 +1,3 @@
-# -*- coding: UTF-8 -*-
 import requests
 import datetime
 
@@ -35,7 +34,8 @@ class TelegramBot(object):
         chat_id = self.get_chat_id()
         params = {
             'chat_id': chat_id,
-            'text': text
+            'text': text,
+            'disable_web_page_preview': True
         }
         response = requests.post(url=self.url + 'sendMessage', data=params)
         return response
@@ -54,6 +54,11 @@ class ScrapyProject(object):
         response = requests.get(url=url)
         return response.json().get('jobs')
 
+    def get_jobs_by_state(self, state):
+        jobs = self.get_jobs()
+        filtered_jobs = filter(lambda job: job.get("state") == state, jobs)
+        return filtered_jobs
+
     def get_errors(self, job):
         errors_count = job.get('errors_count')
         if errors_count:
@@ -68,11 +73,8 @@ class ScrapyProject(object):
         if errors:
             for error in errors:
                 error_time = datetime.datetime.utcfromtimestamp(error.get('time') / 1000)  # time in milliseconds
-                ttt = error_time + datetime.timedelta(days=7, hours=7, minutes=35, seconds=30)
-                new_error = ttt >= datetime.datetime.utcnow()
-                # print(ttt)
-                # print(datetime.datetime.utcnow())
-                if new_error:
+                is_new_error = error_time + datetime.timedelta(minutes=1) >= datetime.datetime.utcnow()
+                if is_new_error:
                     error_messages.append("{}\n{}".format(error_time, error.get('message')))
         return error_messages
 
@@ -80,7 +82,7 @@ class ScrapyProject(object):
 scrapy_project = ScrapyProject(SCRAPY_API_KEY, SCRAPY_PROJECT_ID)
 telegram_bot = TelegramBot(BOT_TOKEN)
 
-for job in scrapy_project.get_jobs():
+for job in scrapy_project.get_jobs_by_state("running"):
     errors = scrapy_project.get_errors(job)
     error_messages = scrapy_project.check_errors(errors)
     if len(error_messages) > 0:
