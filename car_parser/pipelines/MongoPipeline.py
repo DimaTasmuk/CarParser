@@ -154,7 +154,7 @@ class MongoPipeline(object):
 
             # Send item to the deep processing for each spider separately
             if isinstance(spider, AutoParser):
-                deep_parsed_item = spider.create_deep_parse_request(origin_link)
+                deep_parsed_item = spider.create_one_deep_request(origin_link)
                 if deep_parsed_item is None:
                     return {
                         "origin_link": origin_link,
