@@ -126,7 +126,7 @@ class MongoPipeline(object):
                     if item.get('sales_price_incl_vat') is None:
                         continue
                     item['is_price_changed'] = \
-                        (item['sales_price_incl_vat'] != already_added_cars[index]['sales_price_incl_vat'])
+                        (item.get('sales_price_incl_vat') != already_added_cars[index].get('sales_price_incl_vat'))
 
                     try:
                         # Process this item as added before
