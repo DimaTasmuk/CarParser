@@ -4,7 +4,7 @@ PARAMETERS = {
     'max_price': '&s%5Bmax_price%5D=',
     'model': '&s%5Bmodel_name%5D=',
     'body_type': '&s%5Bbody_types%5D%5B%5D=',
-    'color': '&s%5Bcolors%5D%5B%5D=',
+    'colour': '&s%5Bcolors%5D%5B%5D=',
 }
 
 ORIGIN_LINK = u"https://www.autouncle.de"

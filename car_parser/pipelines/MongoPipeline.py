@@ -163,6 +163,8 @@ class MongoPipeline(object):
                 info_update = dict(deep_parsed_item)
             elif isinstance(spider, AutoUncleParser):
                 info_update = dict(spider.create_one_deep_request(origin_link, item['model']))
+                info_update['colour'] = item.get('colour')
+                info_update['body_type'] = item.get('body_type')
             elif isinstance(spider, AutoScoutParser):
                 deep_parsed_item = spider.create_deep_parse_request(
                     item['old_url'],

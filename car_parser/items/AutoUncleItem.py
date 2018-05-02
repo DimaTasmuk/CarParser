@@ -5,6 +5,8 @@ class AutoUncleItem(scrapy.Item):
     origin_link = scrapy.Field()
     make = scrapy.Field()
     model = scrapy.Field()
+    colour = scrapy.Field()
+    body_type = scrapy.Field()
     marketing_headline = scrapy.Field()
     sales_price_incl_vat = scrapy.Field()
     currency = scrapy.Field()

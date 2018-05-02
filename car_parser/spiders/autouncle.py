@@ -67,13 +67,13 @@ class AutoUncleParser(scrapy.Spider):
 
             for model in (self.models[brand]):
                 for body_type in self.body_types:
-                    for color in self.colors:
+                    for colour in self.colors:
                         self.adverts.clear()
                         url = response.url \
                               + PARAMETERS['brand'] + brand \
                               + PARAMETERS['model'] + model \
                               + PARAMETERS['body_type'] + body_type \
-                              + PARAMETERS['color'] + color
+                              + PARAMETERS['colour'] + colour
                         yield response.follow(url, self.parse_price)
 
     def parse_price(self, response):
@@ -148,11 +148,21 @@ class AutoUncleParser(scrapy.Spider):
                     self.get_string_value_by_parameter(response.url,
                                                        PARAMETERS['model'])
                 )
+                colour = self.replace_inconvenient_symbols(
+                    self.get_string_value_by_parameter(response.url,
+                                                       PARAMETERS['colour'])
+                )
+                body_type = self.replace_inconvenient_symbols(
+                    self.get_string_value_by_parameter(response.url,
+                                                       PARAMETERS['body_type'])
+                )
                 if self.deep_parse_enabled:
                     self.create_one_deep_request(response.urljoin(origin_link), model)
                 else:
                     loader = AutoUncleLoader(item=AutoUncleItem(), selector=car)
                     loader.add_value('model', unicode(model))
+                    loader.add_value('colour', unicode(colour))
+                    loader.add_value('body_type', unicode(body_type))
                     loader.add_value('origin_link', unicode(ORIGIN_LINK + origin_link))
                     loader.add_css('sales_price_incl_vat', "div.pricing span.price::attr(content)")
 
