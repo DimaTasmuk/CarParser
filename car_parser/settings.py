@@ -27,7 +27,7 @@ LOG_LEVEL = "INFO"
 # LOG_LEVEL = "DEBUG"
 
 COOKIES_ENABLED = False
-
+SPLASH_URL = 'http://195.201.115.120:8050'
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
 
@@ -56,10 +56,17 @@ COOKIES_ENABLED = False
 #SPIDER_MIDDLEWARES = {
 #    'car_parser.middlewares.CarParserSpiderMiddleware': 543,
 #}
-
-DOWNLOADER_MIDDLEWARES = {
-    'car_parser.middleware.FilterMiddleware.FilterMiddleware': 300
+SPIDER_MIDDLEWARES = {
+    'scrapy_splash.SplashDeduplicateArgsMiddleware': 100,
 }
+DUPEFILTER_CLASS = 'scrapy_splash.SplashAwareDupeFilter'
+DOWNLOADER_MIDDLEWARES = {
+    'car_parser.middleware.FilterMiddleware.FilterMiddleware': 300,
+    'scrapy_splash.SplashCookiesMiddleware': 723,
+    'scrapy_splash.SplashMiddleware': 725,
+    'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware': 810,
+}
+AJAXCRAWL_ENABLED = True
 
 # Enable or disable downloader middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html

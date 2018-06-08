@@ -5,6 +5,7 @@ from urlparse import urljoin
 from math import ceil
 
 from scrapy.selector import Selector
+from scrapy_splash import SplashRequest
 
 from .literals.autoscout import *
 from car_parser.utilities.uri import *
@@ -16,8 +17,7 @@ import requests
 
 
 # Spider call structure: scrapy crawl <name> -o <output file> -a <arguments>
-# Spider call example: scrapy crawl autoscout24 -o brand.json -a deep=true
-# Spider call example: scrapy crawl autoscout24 -o brand.json -a deep=false
+# Spider call example: scrapy crawl autoscout24
 
 
 class AutoScoutParser(Spider):
@@ -29,18 +29,11 @@ class AutoScoutParser(Spider):
 
     brands = dict()
     models = dict()
+    WAIT_TIME = 2  # time in seconds to wait before get response from SplashRequest
 
-    # Processing arguments from cmd
-    def __init__(self, **kwargs):
-        super(AutoScoutParser, self).__init__(**kwargs)
-
-        if hasattr(self, 'deep') and self.deep.lower() == 'true':
-            self.deep_parse_enabled = True
-
-    # Initialize spider
     def start_requests(self):
         return [
-            Request('https://www.autoscout24.de/ergebnisse',
+            SplashRequest('https://www.autoscout24.de/ergebnisse',
                     self.filter_by_brand)
         ]
 
@@ -49,10 +42,24 @@ class AutoScoutParser(Spider):
     def filter_by_brand(self, response):
         # Get all tags with brands
         brands = response.xpath(COMMON_XPATH['brands'])
+        # brands = json.loads(re.search('config = (?P<extract>.+);',
+        #                               response.xpath('//*[@id="list"]/div[1]/div[6]/script[2]').extract_first().replace(
+        #                                   '\n', '')).group(1)).get('taxonomy').get('makes')
+        # brands = json.loads(re.search('config = (?P<extract>.+);',
+        #                               response.css("#list div.cl-header-top-box.sc-content-container div.cl-classified-list-container").extract_first().replace(
+        #                                   '\n', '')).group(1)).get('taxonomy').get('makes')
+        # brands = json.loads(
+        #     re.search(
+        #         'config = (?P<extract>.+);',
+        #         response.xpath('//*[@id="list"]/div[1]/div[6]/script[2]').extract_first().replace('\n', '')
+        #     ).group(1)#list > div.cl-header-top-box.sc-content-container > div.cl-classified-list-container > script:nth-child(6)
+        # ).get('taxonomy').get('makes')
         for brand in brands:
             # Get current brand key and value
             brand_key = brand.xpath('./@key').extract_first()
             brand_value = brand.xpath('./@value').extract_first()
+            # brand_key = str(brand.get('id'))
+            # brand_value = unicode(brand.get('label'))
 
             # Put brand to the dictionary
             self.brands[brand_key] = brand_value
@@ -64,19 +71,20 @@ class AutoScoutParser(Spider):
 
             # Make new request with selected brand
             uri = set_parameter(response.url, PARAMETERS['brand'], brand_key)
-            yield Request(uri, self.filter_by_model)
+            yield SplashRequest(uri, self.filter_by_model, args={'wait': self.WAIT_TIME})
 
     # Tier 1
     # Initialize model-specific requests
     def filter_by_model(self, response):
         brand_key = get_parameter(response.url, PARAMETERS['brand'])
+        # brand_key = str(get_parameter(response.url, PARAMETERS['brand']))
         self.models[brand_key] = self.get_models(response)
 
         for model_key, model_value in self.models[brand_key].items():
             url = response.url
             url = set_parameter(url, PARAMETERS['model'], model_key)
             url = self.set_price_limits(url, MIN_PRICE, MAX_PRICE)
-            yield Request(url, self.filter_by_price)
+            yield SplashRequest(url, self.filter_by_price, args={'wait': self.WAIT_TIME})
 
     # Tier 2.1
     # Binary filtering by price
@@ -89,15 +97,15 @@ class AutoScoutParser(Spider):
                 median = price_from + (price_to - price_from) // 2
 
                 url = self.set_price_limits(response.url, price_from, median)
-                yield Request(url, self.filter_by_price)
+                yield SplashRequest(url, self.filter_by_price, args={'wait': self.WAIT_TIME})
 
                 url = self.set_price_limits(response.url, median + 1, price_to)
-                yield Request(url, self.filter_by_price)
+                yield SplashRequest(url, self.filter_by_price, args={'wait': self.WAIT_TIME})
 
             else:
-                url = response.url
-                url = self.set_mileage_limits(url, MIN_MILEAGE, MAX_MILEAGE)
-                yield Request(url, self.filter_by_mileage)
+                # url = response.url
+                url = self.set_mileage_limits(response.url, MIN_MILEAGE, MAX_MILEAGE)
+                yield SplashRequest(url, self.filter_by_mileage, args={'wait': self.WAIT_TIME})
 
         else:
             for request in self.init_parse(response):
@@ -115,10 +123,10 @@ class AutoScoutParser(Spider):
                 url = response.url
 
                 url = self.set_mileage_limits(url, mileage_from, median)
-                yield Request(url, self.filter_by_mileage)
+                yield SplashRequest(url, self.filter_by_mileage, args={'wait': self.WAIT_TIME})
 
                 url = self.set_mileage_limits(url, median + 1, mileage_to)
-                yield Request(url, self.filter_by_mileage)
+                yield SplashRequest(url, self.filter_by_mileage, args={'wait': self.WAIT_TIME})
 
             else:
                 error_info = self.get_quantity_error_info(response)
@@ -141,7 +149,7 @@ class AutoScoutParser(Spider):
         url = set_parameter(url, 'size', 20)
         for index in range(1, pages + 1):
             url = set_parameter(url, 'page', index)
-            yield Request(url, self.parse)
+            yield SplashRequest(url, self.parse, args={'wait': self.WAIT_TIME})
 
     # Tier 4
     # Create car-specific requests
@@ -152,7 +160,7 @@ class AutoScoutParser(Spider):
                     yield record
         except ValueError:
             self.logger.warning("Invalid data on %s" % response.url)
-            yield Request(response.url, self.parse)
+            yield SplashRequest(response.url, self.parse, args={'wait': self.WAIT_TIME})
 
         if self.deep_parse_enabled:
             for url in response.xpath(COMMON_XPATH['car_link']):
@@ -169,7 +177,7 @@ class AutoScoutParser(Spider):
             r.encoding = 'utf-8'
             return self.deep_parse(r, mode)
         else:
-            return Request(new_url, self.deep_parse)
+            return SplashRequest(new_url, self.deep_parse, args={'wait': self.WAIT_TIME})
 
     def updating_parse(self, response):
         records = []
@@ -262,7 +270,7 @@ class AutoScoutParser(Spider):
 
         if not self.is_valid(record):
             self.logger.info("Invalid response from %s" % origin_link)
-            return Request(origin_link, self.parse)
+            return SplashRequest(origin_link, self.parse, args={'wait': self.WAIT_TIME})
 
         return self.deep_normalization(record)
 
@@ -451,6 +459,14 @@ class AutoScoutParser(Spider):
     @staticmethod
     def get_models(response):
         models = list()
+        # for model in json.loads(
+        #         re.search(
+        #             'config = (?P<extract>.+);',
+        #             response.xpath('//*[@id="list"]/div[1]/div[6]/script[2]').extract_first().replace('\n', '')
+        #         ).group(1)
+        # ).get("initialState").get("filters").get("makeModelModellineVersions")[0].get('availableModelModelLines'):
+        #     model_key = str(model.get('id'))
+        #     model_value = model.get('name')
         for model in response.xpath(COMMON_XPATH['models']):
             model_key = model.xpath('./@key').extract_first()
             model_value = model.xpath('./@value').extract_first()
