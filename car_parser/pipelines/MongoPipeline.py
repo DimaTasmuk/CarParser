@@ -192,6 +192,11 @@ class MongoPipeline(object):
             info['iteration_id'] = self.iteration_id
             info['is_synced'] = 0
             # Save item for future insert
+            if item.get('currency') is None:
+                return {
+                    "origin_link": origin_link,
+                    "information": "Invalid response"
+                }
             if item.get('sales_price_incl_vat') is None:
                 return {
                     "origin_link": origin_link,
