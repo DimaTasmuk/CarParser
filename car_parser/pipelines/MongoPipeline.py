@@ -23,7 +23,7 @@ class MongoPipeline(object):
     bucket_for_update = []
     bucket_of_items_to_process = []
 
-    MAX_BUCKET_SIZE = 2000
+    MAX_BUCKET_SIZE = 1000
 
     @staticmethod
     def log_method_name(method_name='Unknown'):
