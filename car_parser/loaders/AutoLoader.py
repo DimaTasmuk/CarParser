@@ -34,3 +34,5 @@ class AutoLoader(ItemLoader):
     colour_in = MapCompose(filter_empty, capitalize_all_words)
     interior_in = MapCompose(filter_empty, capitalize_all_words)
     interior_out = Join(separator=', ')
+    postal_code_out = TakeFirst()
+    country_out = TakeFirst()

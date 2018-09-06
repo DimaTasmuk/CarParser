@@ -57,24 +57,7 @@ class AutoParser(scrapy.Spider):
             if origin_link not in self.parsed_cars_links:
                 loader = AutoLoader(item=AutoItem(), selector=car)
                 loader.add_value('origin_link', unicode(origin_link))
-                # loader.add_css('id', "li::attr(data-id)")
-                # loader.add_css('marketing_headline', "*.headline.ellipsisText::text")
                 loader.add_css('sales_price_incl_vat', "span.priceBig::text", re='\S+')
-                # loader.add_css('sales_price_excl_vat', "div.priceBox::text", re='\S+')
-                # loader.add_css('currency', "span.priceBig::text")
-                #
-                # vehicle_data_loader = loader.nested_css("div.technicalData")
-                # vehicle_data_loader.add_css('mileage', "span[data-content*=mileage]::text", re="(?P<extract>.*) km")
-                # vehicle_data_loader.add_css('power_in_kw', "span[data-content*=power]::text", re="(?P<extract>\d+) kW")
-                # vehicle_data_loader.add_css('power_in_ps', "span[data-content*=power]::text", re="(?P<extract>\d+) PS")
-                # vehicle_data_loader.add_css('fuel', "span[data-content*=fuelType]::text")
-                # vehicle_data_loader.add_css('fuel_consumption_comb', "div::text", re='(?P<extract>\S+) l/100km')
-                # vehicle_data_loader.add_css('co2_emission', "div::text", re='(?P<extract>\d+)g CO2/km')
-                # vehicle_data_loader.add_css('gearbox', "span[data-content*=gearbox]::text")
-                # vehicle_data_loader.add_css('first_registration', "span[data-content*=registrationDate]::text",
-                #                             re="EZ (?P<extract>.*)")
-
-                # self.parsed_cars_links.add(origin_link)
                 yield loader.load_item()
 
         next_page = response.css("div.pagNext a.icon-right-dir::attr(href)").extract_first()
@@ -84,7 +67,8 @@ class AutoParser(scrapy.Spider):
     # Start deep parse for all items
     def create_deep_parse_requests(self, response):
         for item in response.css('ul.vehicleOffers.vehicleList li.offers.size1of1.contentDesc'):
-            yield self.create_one_deep_request(self.ORIGIN_LINK + item.css('a.vehicleOffersBox::attr(href)').extract_first())
+            yield self.create_one_deep_request(self.ORIGIN_LINK + item.css('a.vehicleOffersBox::attr(href)')
+                                               .extract_first())
 
         next_page = response.css("div.pagNext a.icon-right-dir::attr(href)").extract_first()
         if next_page is not None:
@@ -105,15 +89,20 @@ class AutoParser(scrapy.Spider):
             loader.add_xpath('make', "//dt[@data-content='brand']/following-sibling::dd[1]/text()")
             loader.add_xpath('model', "//dt[@data-content='model']/following-sibling::dd[1]/text()")
             loader.add_xpath('marketing_headline', "//dt[@data-content='modelVariant']/following-sibling::dd[1]/text()")
-            loader.add_css('sales_price_incl_vat', "span.priceBig::text", re="(\d+(?:\.)?(?:\d+)?)+")
-            loader.add_css('sales_price_excl_vat', "td.priceInfo::text", re="(\d+(?:\.)?(?:\d+)?)+")
+            loader.add_css('sales_price_incl_vat', "span.priceBig::text",
+                           re="(\d+(?:\.)?(?:\d+)?)+")
+            loader.add_css('sales_price_excl_vat', "td.priceInfo::text",
+                           re="(\d+(?:\.)?(?:\d+)?)+")
             loader.add_css('currency', "span.priceBig::text")
             loader.add_xpath('body_type', "//dt[@data-content='bodyType']/following-sibling::dd[1]/text()")
-            loader.add_xpath('mileage', "//td[@data-content='mileage']/text()", re="\S+")
+            loader.add_xpath('mileage', "//td[@data-content='mileage']/text()",
+                             re="\S+")
             loader.add_xpath('cubic_capacity', "//dt[@data-content='cubicCapacity']/following-sibling::dd[1]/text()",
                              re="\S+")
-            loader.add_xpath('power_in_kw', "//td[@data-content='power']/text()", re="(?P<extract>\d+) kW")
-            loader.add_xpath('power_in_ps', "//td[@data-content='power']/text()", re="(?P<extract>\d+) PS")
+            loader.add_xpath('power_in_kw', "//td[@data-content='power']/text()",
+                             re="(?P<extract>\d+) kW")
+            loader.add_xpath('power_in_ps', "//td[@data-content='power']/text()",
+                             re="(?P<extract>\d+) PS")
             loader.add_xpath('fuel', "//td[@data-content='fuelType']/text()")
             loader.add_xpath('fuel_consumption_comb',
                              "//dt[@data-content='consumption']/following-sibling::dd[1]/text()",
@@ -124,17 +113,21 @@ class AutoParser(scrapy.Spider):
             loader.add_xpath('fuel_consumption_country',
                              "//dt[@data-content='consumption']/following-sibling::dd[1]/text()",
                              re="ausserorts: (?P<extract>\S+)")
-            loader.add_xpath('co2_emission', "//dt[@data-content='co2']/following-sibling::dd[1]/text()", re="\d+")
+            loader.add_xpath('co2_emission', "//dt[@data-content='co2']/following-sibling::dd[1]/text()",
+                             re="\d+")
             loader.add_css('energy_efficiency_class', "span.contentSprite.coClass::text")
             loader.add_xpath('number_of_seats', "//dt[@data-content='seatCount']/following-sibling::dd[1]/text()")
-            loader.add_xpath('number_of_doors', "//dt[@data-content='doorCount']/following-sibling::dd[1]/text()", re='\d+')
-            loader.add_xpath('gearbox', "//td[@data-content='gearbox']/text()", re="\S+")
+            loader.add_xpath('number_of_doors', "//dt[@data-content='doorCount']/following-sibling::dd[1]/text()",
+                             re='\d+')
+            loader.add_xpath('gearbox', "//td[@data-content='gearbox']/text()",
+                             re="\S+")
             loader.add_xpath('emission_class', "//dt[@data-content='contaminantType']/following-sibling::dd[1]/text()")
             loader.add_xpath('first_registration', "//td[@data-content='registrationDate']/text()",
                              re="EZ (?P<extract>.*)")
             loader.add_xpath('number_of_previous_owners',
                              "//dt[@data-content='previousOwnerCount']/following-sibling::dd[1]/text()")
-            loader.add_xpath('service_maintenance', "//td[@data-content='huDate']/text()", re="HU (?P<extract>.*)")
+            loader.add_xpath('service_maintenance', "//td[@data-content='huDate']/text()",
+                             re="HU (?P<extract>.*)")
             loader.add_xpath('climate_control', "//span[@data-content='hasAirCon']/text()")
             loader.add_xpath('climate_control', "//span[@data-content='hasAirConAutomatic']/text()")
             loader.add_xpath('parking_sensors', "//span[@data-content='hasParkingAssist']/text()")
@@ -142,6 +135,19 @@ class AutoParser(scrapy.Spider):
             loader.add_xpath('colour', "//dt[@data-content='exteriorColor']/following-sibling::dd[1]/text()")
             loader.add_xpath('interior', "//dt[@data-content='intType']/following-sibling::dd[1]/text()")
             loader.add_xpath('interior', "//dt[@data-content='intColor']/following-sibling::dd[1]/text()")
+            loader.add_xpath('postal_code',
+                             "//div[contains(@class, 'dealerContactBox')]"
+                             "/div[@class='contentBox defaultBox contentGreyDark']"
+                             "/table"
+                             "/following-sibling::p"
+                             "/text()[2]",
+                             re="\s*([0-9]*)")
+            loader.add_xpath('country',
+                             "//div[contains(@class, 'dealerContactBox')]"
+                             "/div[@class='contentBox defaultBox contentGreyDark']"
+                             "/table/following-sibling::p"
+                             "/text()[2]",
+                             re="\s*[0-9]*\s((\S+\s{1})*)")
 
             self.parsed_cars_links.add(response.url)
             return loader.load_item()

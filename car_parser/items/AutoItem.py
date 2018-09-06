@@ -33,3 +33,5 @@ class AutoItem(scrapy.Item):
     colour = scrapy.Field()
     interior = scrapy.Field()
     id = scrapy.Field()
+    postal_code = scrapy.Field()
+    country = scrapy.Field()
