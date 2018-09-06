@@ -7,6 +7,7 @@ import scrapy
 import re
 
 from scrapy import Selector
+from scrapy.loader.processors import TakeFirst
 
 from car_parser.items import AutoUncleItem
 from car_parser.loaders import AutoUncleLoader
@@ -47,6 +48,7 @@ class AutoUncleParser(scrapy.Spider):
         brands_models_response = response.css("body script").re(r"brandAndModel: \{\s.*\s*brandsAndModels: \{(.*)},")[0]
         brands_models = brands_models_response.split("]]")
 
+        # yield response.follow("https://www.autouncle.de/de/gebrauchtwagen/86036719-vw-up-bmt-automatik-wenig-km?ref=search-results", self.parse_car)
         # Split brands and their models
         for row in brands_models[:-1]:
             """
@@ -256,6 +258,7 @@ class AutoUncleParser(scrapy.Spider):
         loader.add_value('emission_class', car.css('ul li.euro_emission_class dfn::text').extract_first())
         loader.add_value('emission_class', car.css('ul li.euro_emission_class span::text').extract_first())
         loader.add_value("parse_date", unicode(datetime.utcnow().strftime("%d-%m-%Y")))
+        loader.add_xpath("published_date", "//meta[@itemprop='datePublished']/@content")
 
         headline = car.css('h3.car-title span span::text').extract_first()
         if headline is None:

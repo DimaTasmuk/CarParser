@@ -25,3 +25,4 @@ class AutoUncleItem(scrapy.Item):
     postal_code = scrapy.Field()
     country = scrapy.Field()
     parse_date = scrapy.Field()
+    published_date = scrapy.Field()
