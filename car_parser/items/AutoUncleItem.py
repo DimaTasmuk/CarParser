@@ -22,3 +22,5 @@ class AutoUncleItem(scrapy.Item):
     climate_control = scrapy.Field()
     gearbox = scrapy.Field()
     parking_sensors = scrapy.Field()
+    postal_code = scrapy.Field()
+    country = scrapy.Field()

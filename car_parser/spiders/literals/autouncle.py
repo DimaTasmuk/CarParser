@@ -1,9 +1,9 @@
 PARAMETERS = {
-    'brand': '?s%5Bbrand%5D=',
+    'brand': 's%5Bbrand%5D=',
     'min_price': '&s%5Bmin_price%5D=',
     'max_price': '&s%5Bmax_price%5D=',
-    'model': '&s%5Bmodel_name%5D=',
-    'body_type': '&s%5Bbody_types%5D%5B%5D=',
+    'model': '&s%5Bcar_model%5D=',
+    'body_type': 's%5Bbody_types%5D%5B%5D=',
     'colour': '&s%5Bcolors%5D%5B%5D=',
 }
 

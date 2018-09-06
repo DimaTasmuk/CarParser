@@ -43,8 +43,7 @@ class AutoUncleParser(scrapy.Spider):
         self.load_colors(response)
 
         # Get all brands and models from start page
-        brands_models_response = response.css("body script") \
-            .re(r"'search_brands_models'] = {(.*)};")[0]
+        brands_models_response = response.css("body script").re(r"brandAndModel: \{\s.*\s*brandsAndModels: \{(.*)},")[0]
         brands_models = brands_models_response.split("]]")
 
         # Split brands and their models
@@ -70,9 +69,9 @@ class AutoUncleParser(scrapy.Spider):
                     for colour in self.colors:
                         self.adverts.clear()
                         url = response.url \
-                              + PARAMETERS['brand'] + brand \
+                              + "?" + PARAMETERS['brand'] + brand \
                               + PARAMETERS['model'] + model \
-                              + PARAMETERS['body_type'] + body_type \
+                              + "&" + PARAMETERS['body_type'] + body_type \
                               + PARAMETERS['colour'] + colour
                         yield response.follow(url, self.parse_price)
 
@@ -141,8 +140,9 @@ class AutoUncleParser(scrapy.Spider):
         )
 
     def parse_car(self, response):
-        for car in response.css("div.car-list-item div.car-details-wrapper"):
-            origin_link = car.css("h3.car-title a::attr(href)").extract_first()
+        for car in response.css("div.listing-item div.listing-item-container"):
+            origin_link = car.xpath("//div[contains(@class, 'car-details-headline-wrapper')]/h3/a/@href")\
+                .extract_first()
             if origin_link not in self.adverts:
                 model = self.replace_inconvenient_symbols(
                     self.get_string_value_by_parameter(response.url,
@@ -164,7 +164,7 @@ class AutoUncleParser(scrapy.Spider):
                     loader.add_value('colour', unicode(colour))
                     loader.add_value('body_type', unicode(body_type))
                     loader.add_value('origin_link', unicode(ORIGIN_LINK + origin_link))
-                    loader.add_css('sales_price_incl_vat', "div.pricing span.price::attr(content)")
+                    loader.add_css('sales_price_incl_vat', "div.price-container span.price::attr(content)")
 
                     yield loader.load_item()
                 self.adverts.add(origin_link)
@@ -174,10 +174,7 @@ class AutoUncleParser(scrapy.Spider):
         ).extract_first()
         if url:
             try:
-                url = url.replace(
-                    re.search('gebrauchtwagen' + '(/.*)\?', url).group(1),
-                    ""
-                )
+                url = re.search('gebrauchtwagen' + '\?(.*)', url).group(0)
             except AttributeError:
                 pass
             yield response.follow(url, self.parse_car)
@@ -203,6 +200,9 @@ class AutoUncleParser(scrapy.Spider):
             for tag in TAGS[key]:
                 if tag in car_tags:
                     loader.add_value(key, tag)
+        postal_code, country = self.get_address(response)
+        loader.add_value('postal_code', postal_code)
+        loader.add_value('country', country)
         return loader.load_item()
 
     def load_tags(self, response):
@@ -220,16 +220,10 @@ class AutoUncleParser(scrapy.Spider):
             self.tags.append(tag)
 
     def load_body_types(self, response):
-        self.body_types = response.css(
-            'div.input-group.body_types '
-            'div.input input::attr(value)'
-        ).extract()[1:]
+        self.body_types = response.css("body script").re(r"bodyType:.*\s*.*options: \[\[(.*)]],")[0].replace("],[", ",").replace('"', "").split(",")[1::2]
 
     def load_colors(self, response):
-        self.colors = response.css(
-            'div.input.colors '
-            'select option::attr(value)'
-        ).extract()[1:]
+        self.colors = response.css("body script").re(r"colors:.*\s*.*options: \[\[(.*)]],")[0].replace("],[", ",").replace('"', "").split(",")[1::2]
 
     def is_filter_required(self, response):
         return self.get_cars_number(response) > MAX_ACCESSIBLE_CARS_NUMBER
@@ -269,8 +263,9 @@ class AutoUncleParser(scrapy.Spider):
                 return
         if headline is None:
                 return
-        headline = headline.replace(loader.get_value('make'), '', 1)
-        headline = headline.replace(loader.get_value('model'), '', 1)
+        headline = headline.replace(loader.get_output_value('make').replace("+", " "), '', 1)
+        headline = headline.replace(loader.get_output_value('model').replace("+", " "), '', 1)
+        headline = headline.strip()
         loader.add_value('marketing_headline', headline)
 
     def get_price_arguments(self, url):
@@ -292,6 +287,23 @@ class AutoUncleParser(scrapy.Spider):
     def get_tags(response):
         return response.css(
             'section.equipment ul.equipment_pills li span::text').extract()
+
+    @staticmethod
+    def get_address(response):
+        contact_information = response.xpath("//section[@class='contact-information']"
+                                             "/ul/li/span[text()='PLZ / Stadt:']"
+                                             "/following-sibling::span[@class='value']"
+                                             "/text()").extract_first()
+        if contact_information is not None:
+            postal_code = re.search(r"[0-9]*", contact_information)
+            if postal_code is not None:
+                postal_code = postal_code.group(0)
+            country = re.search(r"[0-9]* (.*)", contact_information)
+            if country is not None:
+                country = country.group(1)
+            return postal_code, country
+        else:
+            return None, None
 
     @staticmethod
     def get_cubic_capacity(response):
@@ -317,8 +329,7 @@ class AutoUncleParser(scrapy.Spider):
 
     @staticmethod
     def get_cars_number(response):
-        count_line = response.css(
-            "div.search-summary span h1::text").extract_first()
+        count_line = response.css("div.page-container div.headings h1::text").extract_first()
         try:
             return int(count_line.split(" ")[0].replace(".", ''))
         except AttributeError:
