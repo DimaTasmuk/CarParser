@@ -35,3 +35,4 @@ class AutoItem(scrapy.Item):
     id = scrapy.Field()
     postal_code = scrapy.Field()
     country = scrapy.Field()
+    parse_date = scrapy.Field()

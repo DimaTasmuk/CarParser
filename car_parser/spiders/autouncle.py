@@ -1,5 +1,6 @@
 # coding=utf-8
 import decimal
+from datetime import datetime
 
 import requests
 import scrapy
@@ -254,6 +255,7 @@ class AutoUncleParser(scrapy.Spider):
         loader.add_css('power_in_ps', 'ul li.hp span::text')
         loader.add_value('emission_class', car.css('ul li.euro_emission_class dfn::text').extract_first())
         loader.add_value('emission_class', car.css('ul li.euro_emission_class span::text').extract_first())
+        loader.add_value("parse_date", unicode(datetime.utcnow().strftime("%d-%m-%Y")))
 
         headline = car.css('h3.car-title span span::text').extract_first()
         if headline is None:

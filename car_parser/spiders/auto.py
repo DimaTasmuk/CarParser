@@ -1,4 +1,6 @@
 # coding=utf-8
+from datetime import datetime
+
 import scrapy
 from scrapy import Request
 import requests
@@ -148,6 +150,7 @@ class AutoParser(scrapy.Spider):
                              "/table/following-sibling::p"
                              "/text()[2]",
                              re="\s*[0-9]*\s((\S+\s{1})*)")
+            loader.add_value("parse_date", unicode(datetime.utcnow().strftime("%d-%m-%Y")))
 
             self.parsed_cars_links.add(response.url)
             return loader.load_item()
