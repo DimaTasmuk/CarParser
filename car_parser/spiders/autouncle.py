@@ -48,7 +48,7 @@ class AutoUncleParser(scrapy.Spider):
         brands_models_response = response.css("body script").re(r"brandAndModel: \{\s.*\s*brandsAndModels: \{(.*)},")[0]
         brands_models = brands_models_response.split("]]")
 
-        # yield response.follow("https://www.autouncle.de/de/gebrauchtwagen/86036719-vw-up-bmt-automatik-wenig-km?ref=search-results", self.parse_car)
+        # yield response.follow("https://www.autouncle.de/de/gebrauchtwagen?s%5Bbody_types%5D%5B%5D=Hatchback&s%5Bbrand%5D=BMW&s%5Bcar_model%5D=116&s%5Bcolors%5D%5B%5D=Black", self.parse_price)
         # Split brands and their models
         for row in brands_models[:-1]:
             """
@@ -144,7 +144,7 @@ class AutoUncleParser(scrapy.Spider):
 
     def parse_car(self, response):
         for car in response.css("div.listing-item div.listing-item-container"):
-            origin_link = car.xpath("//div[contains(@class, 'car-details-headline-wrapper')]/h3/a/@href")\
+            origin_link = car.xpath("div//div[contains(@class, 'car-details-headline-wrapper')]/h3/a/@href")\
                 .extract_first()
             if origin_link not in self.adverts:
                 model = self.replace_inconvenient_symbols(
