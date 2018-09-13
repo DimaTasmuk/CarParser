@@ -1,5 +1,6 @@
 import copy
 import inspect
+from datetime import datetime
 
 import pymongo
 from pymongo.errors import DuplicateKeyError
@@ -191,6 +192,7 @@ class MongoPipeline(object):
             info.update(info_update)
             info['iteration_id'] = self.iteration_id
             info['is_synced'] = 0
+            info['parse_date'] = self.get_parse_date()
             # Save item for future insert
             if info.get('currency') is None:
                 return {
@@ -239,7 +241,8 @@ class MongoPipeline(object):
                             {
                                 'iteration_id': self.iteration_id,
                                 'is_synced': 0,
-                                'sales_price_incl_vat': item['sales_price_incl_vat']
+                                'sales_price_incl_vat': item['sales_price_incl_vat'],
+                                'parse_date': self.get_parse_date()
                             }
                     }
                 )
@@ -267,7 +270,8 @@ class MongoPipeline(object):
                             {
                                 '$set':
                                 {
-                                    'iteration_id': self.iteration_id
+                                    'iteration_id': self.iteration_id,
+                                    'parse_date': self.get_parse_date()
                                 }
                             },
                             multi=True
@@ -314,7 +318,8 @@ class MongoPipeline(object):
                     {
                         '$set':
                             {
-                                'iteration_id': self.iteration_id
+                                'iteration_id': self.iteration_id,
+                                'parse_date': self.get_parse_date()
                             }
                     },
                     multi=True
@@ -343,3 +348,6 @@ class MongoPipeline(object):
                 if b_item.get(m_field) is not None:
                     self.good_mandatory_fields[m_field] = True
                     self.mandatory.remove(m_field)
+
+    def get_parse_date(self):
+        return unicode(datetime.utcnow().strftime("%d-%m-%Y"))

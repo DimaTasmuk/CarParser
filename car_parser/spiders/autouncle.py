@@ -257,7 +257,6 @@ class AutoUncleParser(scrapy.Spider):
         loader.add_css('power_in_ps', 'ul li.hp span::text')
         loader.add_value('emission_class', car.css('ul li.euro_emission_class dfn::text').extract_first())
         loader.add_value('emission_class', car.css('ul li.euro_emission_class span::text').extract_first())
-        loader.add_value("parse_date", unicode(datetime.utcnow().strftime("%d-%m-%Y")))
         loader.add_xpath("published_date", "//meta[@itemprop='datePublished']/@content")
 
         headline = car.css('h3.car-title span span::text').extract_first()
