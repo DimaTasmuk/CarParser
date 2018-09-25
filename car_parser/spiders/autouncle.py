@@ -143,22 +143,22 @@ class AutoUncleParser(scrapy.Spider):
         )
 
     def parse_car(self, response):
+        model = self.replace_inconvenient_symbols(
+            self.get_string_value_by_parameter(response.url,
+                                               PARAMETERS['model'])
+        )
+        colour = self.replace_inconvenient_symbols(
+            self.get_string_value_by_parameter(response.url,
+                                               PARAMETERS['colour'])
+        )
+        body_type = self.replace_inconvenient_symbols(
+            self.get_string_value_by_parameter(response.url,
+                                               PARAMETERS['body_type'])
+        )
         for car in response.css("div.listing-item div.listing-item-container"):
             origin_link = car.xpath("div//div[contains(@class, 'car-details-headline-wrapper')]/h3/a/@href")\
                 .extract_first()
             if origin_link not in self.adverts:
-                model = self.replace_inconvenient_symbols(
-                    self.get_string_value_by_parameter(response.url,
-                                                       PARAMETERS['model'])
-                )
-                colour = self.replace_inconvenient_symbols(
-                    self.get_string_value_by_parameter(response.url,
-                                                       PARAMETERS['colour'])
-                )
-                body_type = self.replace_inconvenient_symbols(
-                    self.get_string_value_by_parameter(response.url,
-                                                       PARAMETERS['body_type'])
-                )
                 if self.deep_parse_enabled:
                     self.create_one_deep_request(response.urljoin(origin_link), model)
                 else:
@@ -176,10 +176,6 @@ class AutoUncleParser(scrapy.Spider):
             "div.pagination-container span.next a::attr(href)"
         ).extract_first()
         if url:
-            try:
-                url = re.search('gebrauchtwagen' + '\?(.*)', url).group(0)
-            except AttributeError:
-                pass
             yield response.follow(url, self.parse_car)
 
     def create_one_deep_request(self, link, model):
