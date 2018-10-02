@@ -123,7 +123,7 @@ class MongoPipeline(object):
             for item in bucket_of_items_to_process:
                 try:
                     # Check if car price was changed at the site
-                    index = already_added_cars_origin_links.index(item['origin_link'])
+                    # index = already_added_cars_origin_links.index(item['origin_link'])
                     if item.get('sales_price_incl_vat') is None:
                         continue
                     # item['is_price_changed'] = \
@@ -230,58 +230,58 @@ class MongoPipeline(object):
             origin_link = item.get('origin_link')
 
             # Update car information
-            if item['is_price_changed']:
-                # Update price, status and iteration id
-                self.mongodb[spider.table_name].update(
-                    {
-                        'origin_link': origin_link
-                    },
-                    {
-                        '$set':
+            # if item['is_price_changed']:
+            #     # Update price, status and iteration id
+            #     self.mongodb[spider.table_name].update(
+            #         {
+            #             'origin_link': origin_link
+            #         },
+            #         {
+            #             '$set':
+            #                 {
+            #                     'iteration_id': self.iteration_id,
+            #                     'is_synced': 0,
+            #                     'sales_price_incl_vat': item['sales_price_incl_vat'],
+            #                     'parse_date': self.get_parse_date()
+            #                 }
+            #         }
+            #     )
+            #     return {
+            #         "origin_link": origin_link,
+            #         "information": "Updated car price"
+            #     }
+            # else:
+            # Save item for future iteration id update
+            self.bucket_for_update.append(origin_link)
+            if len(self.bucket_for_update) >= self.MAX_BUCKET_SIZE:
+                try:
+                    # Create copy of the global variable for future process
+                    copy_of_bucket_for_update = copy.copy(self.bucket_for_update)
+                    self.bucket_for_update = []
+
+                    # Update only iteration id
+                    self.mongodb[spider.table_name].update(
+                        {
+                            'origin_link':
+                            {
+                                '$in': copy_of_bucket_for_update
+                            }
+                        },
+                        {
+                            '$set':
                             {
                                 'iteration_id': self.iteration_id,
-                                'is_synced': 0,
-                                'sales_price_incl_vat': item['sales_price_incl_vat'],
                                 'parse_date': self.get_parse_date()
                             }
-                    }
-                )
-                return {
-                    "origin_link": origin_link,
-                    "information": "Updated car price"
-                }
-            else:
-                # Save item for future iteration id update
-                self.bucket_for_update.append(origin_link)
-                if len(self.bucket_for_update) >= self.MAX_BUCKET_SIZE:
-                    try:
-                        # Create copy of the global variable for future process
-                        copy_of_bucket_for_update = copy.copy(self.bucket_for_update)
-                        self.bucket_for_update = []
-
-                        # Update only iteration id
-                        self.mongodb[spider.table_name].update(
-                            {
-                                'origin_link':
-                                {
-                                    '$in': copy_of_bucket_for_update
-                                }
-                            },
-                            {
-                                '$set':
-                                {
-                                    'iteration_id': self.iteration_id,
-                                    'parse_date': self.get_parse_date()
-                                }
-                            },
-                            multi=True
-                        )
-                    except DuplicateKeyError:
-                        self.bucket_for_update = []
-                return {
-                    "origin_link": origin_link,
-                    "information": "Already in database"
-                }
+                        },
+                        multi=True
+                    )
+                except DuplicateKeyError:
+                    self.bucket_for_update = []
+            return {
+                "origin_link": origin_link,
+                "information": "Already in database"
+            }
         except Exception as e:
             self.log(e, inspect.stack()[0][3], item.get('origin_link'))
 
