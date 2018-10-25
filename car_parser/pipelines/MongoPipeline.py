@@ -26,6 +26,8 @@ class MongoPipeline(object):
 
     MAX_BUCKET_SIZE = 1000
 
+    was_new_items = False
+
     @staticmethod
     def log_method_name(method_name='Unknown'):
         print('Method: {0}'.format(method_name))
@@ -121,33 +123,36 @@ class MongoPipeline(object):
                 already_added_cars_origin_links.append(car['origin_link'])
 
             for item in bucket_of_items_to_process:
-                try:
-                    # Check if car price was changed at the site
-                    # index = already_added_cars_origin_links.index(item['origin_link'])
-                    if item.get('sales_price_incl_vat') is None:
-                        continue
-                    # item['is_price_changed'] = \
-                    #     (item.get('sales_price_incl_vat') != already_added_cars[index].get('sales_price_incl_vat'))
-
+                if item["origin_link"] in already_added_cars_origin_links:
                     try:
-                        # Process this item as added before
-                        current_item = item
-                        self.process_added_items(item, spider)
+                        # Check if car price was changed at the site
+                        # index = already_added_cars_origin_links.index(item['origin_link'])
+                        if item.get('sales_price_incl_vat') is None:
+                            continue
+                        # item['is_price_changed'] = \
+                        #     (item.get('sales_price_incl_vat') != already_added_cars[index].get('sales_price_incl_vat'))
+
+                        try:
+                            # Process this item as added before
+                            current_item = item
+                            self.process_added_items(item, spider)
+                        except Exception as e:
+                            self.log(e, inspect.stack()[0][3], current_item.get('origin_link'))
+
+                    # # Catching when item hasn't previous price(wasn't added)
+                    # except ValueError as e:
+                    #     # Process item as new
+                    #     self.process_new_items(item, spider)
+
                     except Exception as e:
-                        self.log(e, inspect.stack()[0][3], current_item.get('origin_link'))
-
-                # Catching when item hasn't previous price(wasn't added)
-                except ValueError as e:
-                    # Process item as new
+                        self.log(e, inspect.stack()[0][3], item.get('origin_link'))
+                else:
                     self.process_new_items(item, spider)
-
-                except Exception as e:
-                    self.log(e, inspect.stack()[0][3], item.get('origin_link'))
-
         except Exception as e:
             self.log(e, inspect.stack()[0][3], item.get('origin_link'))
 
     def process_new_items(self, item, spider):
+        self.was_new_items = True
         try:
             origin_link = item['origin_link']
             info = dict()
@@ -324,6 +329,8 @@ class MongoPipeline(object):
                     },
                     multi=True
                 )
+            if self.was_new_items is False:
+                self.mandatory = []
             self.iteration_collection.update(
                             {
                                 'site_name': spider.table_name
